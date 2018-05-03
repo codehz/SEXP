@@ -60,7 +60,6 @@ let simplifyPath: (SExp.t, path) => list(int) =
       };
 
 type state = {
-  expr: SExp.t,
   select: path,
 };
 
@@ -163,23 +162,23 @@ let actionDump =
 
 let make = (~data: SExp.t, ~onUpdate, _children) => {
   ...component,
-  initialState: () => {expr: data, select: RootPath},
-  reducer: (action: action, state: state) => {
+  initialState: () => {select: RootPath},
+  reducer: (action: action, _state: state) => {
     action |> actionDump |> Js.log;
     let handleUpdate =
       fun
-      | CleanUpdate(path) => Update({...state, select: path})
+      | CleanUpdate(path) => Update({select: path})
       | DirtyUpdate(expr) =>
-        UpdateWithSideEffects({...state, expr}, ((_) => onUpdate(expr)))
+        SideEffects(((_) => onUpdate(expr)))
       | MixUpdate(path, expr) =>
         UpdateWithSideEffects(
-          {select: path, expr},
+          {select: path},
           ((_) => onUpdate(expr)),
         );
     switch (action) {
     | Select(path) => handleUpdate(CleanUpdate(path))
     | Append(path, direction) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         /* root */
@@ -224,10 +223,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let (expr, path) = access(x => x, (spath, state.expr, []));
+      let (expr, path) = access(x => x, (spath, data, []));
       handleUpdate(MixUpdate(path, expr));
     | AppendWithNil(path, direction) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         /* root */
@@ -282,10 +281,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let (expr, path) = access(x => x, (spath, state.expr, []));
+      let (expr, path) = access(x => x, (spath, data, []));
       handleUpdate(MixUpdate(path, expr));
     | Delete(path, dir) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         | ([], SExp.List(_) as src) => (src |> fn, RootPath)
@@ -314,10 +313,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let (expr, path) = access(x => x, (spath, state.expr));
+      let (expr, path) = access(x => x, (spath, data));
       handleUpdate(MixUpdate(path, expr));
     | Package(path) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         /* root */
@@ -351,10 +350,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let (expr, path) = access(x => x, (spath, state.expr, []));
+      let (expr, path) = access(x => x, (spath, data, []));
       handleUpdate(MixUpdate(path, expr));
     | Unpackage(path) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         | ([], src) => src |> fn
@@ -387,10 +386,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let expr = access(x => x, (spath, state.expr));
+      let expr = access(x => x, (spath, data));
       handleUpdate(DirtyUpdate(expr));
     | AsNil(path) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         | ([], SExp.Atom("")) => SExp.List([]) |> fn
@@ -413,10 +412,10 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let expr = access(x => x, (spath, state.expr));
+      let expr = access(x => x, (spath, data));
       handleUpdate(DirtyUpdate(expr));
     | Modify(path, text) =>
-      let spath = path |> simplifyPath(state.expr) |> List.rev;
+      let spath = path |> simplifyPath(data) |> List.rev;
       let rec access = fn => (
         fun
         | ([], SExp.Atom(_)) => SExp.Atom(text) |> fn
@@ -438,14 +437,12 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
           )
         | _ => raise(InvalidPath(path))
       );
-      let expr = access(x => x, (spath, state.expr));
+      let expr = access(x => x, (spath, data));
       handleUpdate(DirtyUpdate(expr));
     };
   },
   render: self => {
-    Js.log(data |> SExp.toString);
-    let expr = self.state.expr;
-    let path = self.state.select |> simplifyPath(expr);
+    let path = self.state.select |> simplifyPath(data);
     let handleFocus = (path, event) => {
       ReactEventRe.Focus.stopPropagation(event);
       Select(SimplePath(path)) |> self.send;

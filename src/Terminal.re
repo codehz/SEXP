@@ -15,6 +15,7 @@ type state = {
   buffer: list(line),
   mods: Eval.smod,
   minibuffer: SExp.t,
+  prompt: option(prompt),
 };
 
 type action =
@@ -53,12 +54,13 @@ module Label = {
   };
 };
 
-let make = (_children) => {
+let make = _children => {
   ...component,
   initialState: () => {
     buffer: [],
     mods: Eval.SModMap.empty,
     minibuffer: SExp.List([]),
+    prompt: None,
   },
   reducer: (action, state) =>
     switch (action) {
@@ -73,23 +75,31 @@ let make = (_children) => {
       })
     | Update(minibuffer) => Update({...state, minibuffer})
     | Execute =>
-      UpdateWithSideEffects({...state, minibuffer: SExp.List([])},
+      UpdateWithSideEffects(
+        {...state, minibuffer: SExp.List([]), prompt: None},
         (
           self =>
-            switch (EvelInstance.eval(self, state.minibuffer)) {
-            | Eval.Result(exp) => AppendBuffer(exp, "success") |> self.send
-            | Eval.Error(exp) => AppendBuffer(exp, "error") |> self.send
+            switch (state.prompt) {
+            | None =>
+              switch (EvelInstance.eval(self, state.minibuffer)) {
+              | Eval.Result(exp) => AppendBuffer(exp, "success") |> self.send
+              | Eval.Error(exp) => AppendBuffer(exp, "error") |> self.send
+              }
+            | Some({handler}) => handler(state.minibuffer)
             }
         ),
       )
+    | Prompt(indicator, handler) =>
+      Update({...state, prompt: Some({indicator, handler})})
     | _ => NoUpdate
     },
   render: self => {
-    let length = self.state.buffer |> List.length;
+    let {buffer, minibuffer, prompt} = self.state;
+    let length = buffer |> List.length;
     <div className="terminal">
       <div className="buffer">
         (
-          self.state.buffer
+          buffer
           |> List.mapi((i, {data: datax, source, time}) =>
                <div className="log" key=(length - i |> string_of_int)>
                  <Label clazz=["source"] value=source />
@@ -102,8 +112,15 @@ let make = (_children) => {
         )
       </div>
       <div className="mini-buffer">
+        (
+          switch (prompt) {
+          | Some({indicator}) =>
+            <Label clazz=["indicator"] value=indicator />
+          | _ => null
+          }
+        )
         <SExpEditor
-          data=self.state.minibuffer
+          data=minibuffer
           onUpdate=(data => Update(data) |> self.send)
         />
         <button onClick=((_) => Execute |> self.send)>

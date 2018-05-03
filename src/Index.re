@@ -22,5 +22,5 @@ module SyncView = {
   };
 };
 
-/* ReactDOMRe.renderToElementWithId(<SyncView data=expr />, "app"); */
-ReactDOMRe.renderToElementWithId(<Terminal />, "app");
+ReactDOMRe.renderToElementWithId(<SyncView data=expr />, "app");
+/* ReactDOMRe.renderToElementWithId(<Terminal />, "app"); */

@@ -106,7 +106,10 @@ function make$1() {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              var length = List.length(self[/* state */1][/* buffer */0]);
+              var match = self[/* state */1];
+              var prompt = match[/* prompt */3];
+              var buffer = match[/* buffer */0];
+              var length = List.length(buffer);
               return React.createElement("div", {
                           className: "terminal"
                         }, React.createElement("div", {
@@ -122,9 +125,12 @@ function make$1() {
                                                             "time",
                                                             /* [] */0
                                                           ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, SExpViewer$ReactTemplate.make(param[/* data */0], /* array */[])));
-                                      }), self[/* state */1][/* buffer */0]))), React.createElement("div", {
+                                      }), buffer))), React.createElement("div", {
                               className: "mini-buffer"
-                            }, ReasonReact.element(/* None */0, /* None */0, SExpEditor$ReactTemplate.make(self[/* state */1][/* minibuffer */2], (function (data) {
+                            }, prompt ? ReasonReact.element(/* None */0, /* None */0, make(prompt[0][/* indicator */0], /* :: */[
+                                        "indicator",
+                                        /* [] */0
+                                      ], /* array */[])) : null, ReasonReact.element(/* None */0, /* None */0, SExpEditor$ReactTemplate.make(match[/* minibuffer */2], (function (data) {
                                         return Curry._1(self[/* send */3], /* Update */Block.__(3, [data]));
                                       }), /* array */[])), React.createElement("button", {
                                   onClick: (function () {
@@ -136,7 +142,8 @@ function make$1() {
               return /* record */[
                       /* buffer : [] */0,
                       /* mods */Eval$ReactTemplate.SModMap[/* empty */0],
-                      /* minibuffer : List */Block.__(1, [/* [] */0])
+                      /* minibuffer : List */Block.__(1, [/* [] */0]),
+                      /* prompt : None */0
                     ];
             }),
           /* retainedProps */component[/* retainedProps */11],
@@ -146,27 +153,34 @@ function make$1() {
                   return /* Update */Block.__(0, [/* record */[
                               /* buffer : [] */0,
                               /* mods */state[/* mods */1],
-                              /* minibuffer */state[/* minibuffer */2]
+                              /* minibuffer */state[/* minibuffer */2],
+                              /* prompt */state[/* prompt */3]
                             ]]);
                 } else {
                   return /* UpdateWithSideEffects */Block.__(2, [
                             /* record */[
                               /* buffer */state[/* buffer */0],
                               /* mods */state[/* mods */1],
-                              /* minibuffer : List */Block.__(1, [/* [] */0])
+                              /* minibuffer : List */Block.__(1, [/* [] */0]),
+                              /* prompt : None */0
                             ],
                             (function (self) {
-                                var match = Curry._2(EvelInstance[/* eval */0], self, state[/* minibuffer */2]);
-                                if (match.tag) {
-                                  return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
-                                                match[0],
-                                                "error"
-                                              ]));
+                                var match = state[/* prompt */3];
+                                if (match) {
+                                  return Curry._1(match[0][/* handler */1], state[/* minibuffer */2]);
                                 } else {
-                                  return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
-                                                match[0],
-                                                "success"
-                                              ]));
+                                  var match$1 = Curry._2(EvelInstance[/* eval */0], self, state[/* minibuffer */2]);
+                                  if (match$1.tag) {
+                                    return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
+                                                  match$1[0],
+                                                  "error"
+                                                ]));
+                                  } else {
+                                    return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
+                                                  match$1[0],
+                                                  "success"
+                                                ]));
+                                  }
                                 }
                               })
                           ]);
@@ -184,16 +198,27 @@ function make$1() {
                                     state[/* buffer */0]
                                   ],
                                   /* mods */state[/* mods */1],
-                                  /* minibuffer */state[/* minibuffer */2]
+                                  /* minibuffer */state[/* minibuffer */2],
+                                  /* prompt */state[/* prompt */3]
                                 ]]);
                   case 1 : 
+                      return /* Update */Block.__(0, [/* record */[
+                                  /* buffer */state[/* buffer */0],
+                                  /* mods */state[/* mods */1],
+                                  /* minibuffer */state[/* minibuffer */2],
+                                  /* prompt : Some */[/* record */[
+                                      /* indicator */action[0],
+                                      /* handler */action[1]
+                                    ]]
+                                ]]);
                   case 2 : 
                       return /* NoUpdate */0;
                   case 3 : 
                       return /* Update */Block.__(0, [/* record */[
                                   /* buffer */state[/* buffer */0],
                                   /* mods */state[/* mods */1],
-                                  /* minibuffer */action[0]
+                                  /* minibuffer */action[0],
+                                  /* prompt */state[/* prompt */3]
                                 ]]);
                   
                 }

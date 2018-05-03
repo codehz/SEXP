@@ -11,7 +11,6 @@ var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
-var SExp$ReactTemplate = require("./SExp.bs.js");
 var ContentEditable$ReactTemplate = require("./ContentEditable.bs.js");
 
 function directionToString(param) {
@@ -258,9 +257,7 @@ function make(data, onUpdate, _) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              console.log(SExp$ReactTemplate.toString(data));
-              var expr = self[/* state */1][/* expr */0];
-              var path = simplifyPath(expr, self[/* state */1][/* select */1]);
+              var path = simplifyPath(data, self[/* state */1][/* select */0]);
               var handleFocus = function (path, $$event) {
                 $$event.stopPropagation();
                 return Curry._1(self[/* send */3], /* Select */Block.__(0, [/* SimplePath */Block.__(0, [path])]));
@@ -580,39 +577,24 @@ function make(data, onUpdate, _) {
               return renderSExp(/* [] */0, data);
             }),
           /* initialState */(function () {
-              return /* record */[
-                      /* expr */data,
-                      /* select : RootPath */0
-                    ];
+              return /* record */[/* select : RootPath */0];
             }),
           /* retainedProps */component[/* retainedProps */11],
-          /* reducer */(function (action, state) {
+          /* reducer */(function (action, _) {
               console.log(actionDump(action));
               var handleUpdate = function (param) {
                 switch (param.tag | 0) {
                   case 0 : 
-                      return /* Update */Block.__(0, [/* record */[
-                                  /* expr */state[/* expr */0],
-                                  /* select */param[0]
-                                ]]);
+                      return /* Update */Block.__(0, [/* record */[/* select */param[0]]]);
                   case 1 : 
                       var expr = param[0];
-                      return /* UpdateWithSideEffects */Block.__(2, [
-                                /* record */[
-                                  /* expr */expr,
-                                  /* select */state[/* select */1]
-                                ],
-                                (function () {
+                      return /* SideEffects */Block.__(1, [(function () {
                                     return Curry._1(onUpdate, expr);
-                                  })
-                              ]);
+                                  })]);
                   case 2 : 
                       var expr$1 = param[1];
                       return /* UpdateWithSideEffects */Block.__(2, [
-                                /* record */[
-                                  /* expr */expr$1,
-                                  /* select */param[0]
-                                ],
+                                /* record */[/* select */param[0]],
                                 (function () {
                                     return Curry._1(onUpdate, expr$1);
                                   })
@@ -626,7 +608,7 @@ function make(data, onUpdate, _) {
                 case 1 : 
                     var direction = action[1];
                     var path = action[0];
-                    var spath = List.rev(simplifyPath(state[/* expr */0], path));
+                    var spath = List.rev(simplifyPath(data, path));
                     var access = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -757,7 +739,7 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath,
-                          state[/* expr */0],
+                          data,
                           /* [] */0
                         ]);
                     return handleUpdate(/* MixUpdate */Block.__(2, [
@@ -767,7 +749,7 @@ function make(data, onUpdate, _) {
                 case 2 : 
                     var direction$1 = action[1];
                     var path$1 = action[0];
-                    var spath$1 = List.rev(simplifyPath(state[/* expr */0], path$1));
+                    var spath$1 = List.rev(simplifyPath(data, path$1));
                     var access$1 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -896,7 +878,7 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$1,
-                          state[/* expr */0],
+                          data,
                           /* [] */0
                         ]);
                     return handleUpdate(/* MixUpdate */Block.__(2, [
@@ -906,7 +888,7 @@ function make(data, onUpdate, _) {
                 case 3 : 
                     var dir = action[1];
                     var path$2 = action[0];
-                    var spath$2 = List.rev(simplifyPath(state[/* expr */0], path$2));
+                    var spath$2 = List.rev(simplifyPath(data, path$2));
                     var access$2 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -990,7 +972,7 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$2,
-                          state[/* expr */0]
+                          data
                         ]);
                     return handleUpdate(/* MixUpdate */Block.__(2, [
                                   match$2[1],
@@ -998,7 +980,7 @@ function make(data, onUpdate, _) {
                                 ]));
                 case 4 : 
                     var path$3 = action[0];
-                    var spath$3 = List.rev(simplifyPath(state[/* expr */0], path$3));
+                    var spath$3 = List.rev(simplifyPath(data, path$3));
                     var access$3 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -1090,7 +1072,7 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$3,
-                          state[/* expr */0],
+                          data,
                           /* [] */0
                         ]);
                     return handleUpdate(/* MixUpdate */Block.__(2, [
@@ -1099,7 +1081,7 @@ function make(data, onUpdate, _) {
                                 ]));
                 case 5 : 
                     var path$4 = action[0];
-                    var spath$4 = List.rev(simplifyPath(state[/* expr */0], path$4));
+                    var spath$4 = List.rev(simplifyPath(data, path$4));
                     var access$4 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -1192,12 +1174,12 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$4,
-                          state[/* expr */0]
+                          data
                         ]);
                     return handleUpdate(/* DirtyUpdate */Block.__(1, [expr]));
                 case 6 : 
                     var path$5 = action[0];
-                    var spath$5 = List.rev(simplifyPath(state[/* expr */0], path$5));
+                    var spath$5 = List.rev(simplifyPath(data, path$5));
                     var access$5 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -1244,13 +1226,13 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$5,
-                          state[/* expr */0]
+                          data
                         ]);
                     return handleUpdate(/* DirtyUpdate */Block.__(1, [expr$1]));
                 case 7 : 
                     var text = action[1];
                     var path$6 = action[0];
-                    var spath$6 = List.rev(simplifyPath(state[/* expr */0], path$6));
+                    var spath$6 = List.rev(simplifyPath(data, path$6));
                     var access$6 = function (_fn, _param) {
                       while(true) {
                         var param = _param;
@@ -1297,7 +1279,7 @@ function make(data, onUpdate, _) {
                             return x;
                           }), /* tuple */[
                           spath$6,
-                          state[/* expr */0]
+                          data
                         ]);
                     return handleUpdate(/* DirtyUpdate */Block.__(1, [expr$2]));
                 
