@@ -29,11 +29,20 @@ type result =
   | Result(SExp.t)
   | Error(SExp.t);
 
+let isValid = text =>
+  Js.Re.test(
+    text,
+    [%re
+      "/(?:-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)|(?:true|false)|null/g"
+    ],
+  );
+
 module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
   module StringMap = Map.Make(String);
-  let eval = ctx =>
+  let rec eval = ctx =>
     fun
-    | SExp.Atom(_) as src => Result(src)
+    | SExp.List([]) as src => Result(src)
+    | SExp.Atom(name) as src when isValid(name) => Result(src)
     | SExp.List([SExp.Atom("quote"), next]) => Result(next)
     | SExp.List([SExp.Atom("string"), SExp.List(list)]) =>
       Result(
@@ -48,8 +57,27 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
         |> (x => SExp.Atom(x)),
       )
     | SExp.List([SExp.Atom("debug"), ...next]) => {
-        Ctx.(ctx << SExp.List(next));
-        Result(SExp.empty);
+        let vals =
+          next
+          |> List.map(eval(ctx))
+          |> List.fold_left(
+               (p, a) =>
+                 switch (p, a) {
+                 | (Result(SExp.List(list)), Result(src)) =>
+                   Result(SExp.List([src, ...list]))
+                 | (Error(_) as err, _)
+                 | (_, Error(_) as err) => err
+                 | (Result(_), _) => Error(SExp.Atom("InvalidEval"))
+                 },
+               Result(SExp.List([])),
+             );
+        switch (vals) {
+        | Result(SExp.List(list)) =>
+          Ctx.(ctx << SExp.List(list |> List.rev));
+          Result(SExp.empty);
+        | Result(_) => raise(Invalid)
+        | Error(_) as err => err
+        };
       }
     | SExp.List([SExp.Atom("clear")]) => {
         ctx |> Ctx.clear;

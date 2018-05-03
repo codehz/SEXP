@@ -22,6 +22,10 @@ function $eq$eq$great(params, body) {
         ];
 }
 
+function isValid(text) {
+  return (/(?:-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?:true|false)|null/g).test(text);
+}
+
 function Make(Ctx) {
   $$Map.Make([$$String.compare]);
   var $$eval = function (ctx, src) {
@@ -41,22 +45,57 @@ function Make(Ctx) {
                   return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
                 }
             case "debug" : 
-                Curry._2(Ctx[/* << */1], ctx, /* List */Block.__(1, [match[1]]));
-                return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
+                var vals = List.fold_left((function (p, a) {
+                        var exit = 0;
+                        if (p.tag) {
+                          return p;
+                        } else {
+                          var match = p[0];
+                          if (match.tag && !a.tag) {
+                            return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
+                                            a[0],
+                                            match[0]
+                                          ]])]);
+                          } else {
+                            exit = 1;
+                          }
+                        }
+                        if (exit === 1) {
+                          if (a.tag) {
+                            return a;
+                          } else {
+                            return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidEval"])]);
+                          }
+                        }
+                        
+                      }), /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]), List.map((function (param) {
+                            return $$eval(ctx, param);
+                          }), match[1]));
+                if (vals.tag) {
+                  return vals;
+                } else {
+                  var match$2 = vals[0];
+                  if (match$2.tag) {
+                    Curry._2(Ctx[/* << */1], ctx, /* List */Block.__(1, [List.rev(match$2[0])]));
+                    return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
+                  } else {
+                    throw Invalid;
+                  }
+                }
             case "define" : 
-                var match$2 = match[1];
-                if (match$2) {
-                  var match$3 = match$2[0];
-                  if (match$3.tag) {
-                    var match$4 = match$3[0];
-                    if (match$4) {
-                      var match$5 = match$4[0];
-                      if (match$5.tag) {
+                var match$3 = match[1];
+                if (match$3) {
+                  var match$4 = match$3[0];
+                  if (match$4.tag) {
+                    var match$5 = match$4[0];
+                    if (match$5) {
+                      var match$6 = match$5[0];
+                      if (match$6.tag) {
                         return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                       } else {
-                        var body = match$2[1];
-                        var params = match$4[1];
-                        var name = match$5[0];
+                        var body = match$3[1];
+                        var params = match$5[1];
+                        var name = match$6[0];
                         if (List.for_all((function (param) {
                                   return param.tag ? false : true;
                                 }), params)) {
@@ -112,8 +151,8 @@ function Make(Ctx) {
                       return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                     }
                   } else {
-                    var body$1 = match$2[1];
-                    var name$1 = match$3[0];
+                    var body$1 = match$3[1];
+                    var name$1 = match$4[0];
                     Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
                           name$1,
                           /* record */[
@@ -157,22 +196,22 @@ function Make(Ctx) {
                   return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                 }
             case "quote" : 
-                var match$6 = match[1];
-                if (match$6) {
-                  if (match$6[1]) {
+                var match$7 = match[1];
+                if (match$7) {
+                  if (match$7[1]) {
                     return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                   } else {
-                    return /* Result */Block.__(0, [match$6[0]]);
+                    return /* Result */Block.__(0, [match$7[0]]);
                   }
                 } else {
                   return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                 }
             case "string" : 
-                var match$7 = match[1];
-                if (match$7) {
-                  var match$8 = match$7[0];
-                  if (match$8.tag) {
-                    if (match$7[1]) {
+                var match$8 = match[1];
+                if (match$8) {
+                  var match$9 = match$8[0];
+                  if (match$9.tag) {
+                    if (match$8[1]) {
                       return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                     } else {
                       return /* Result */Block.__(0, [/* Atom */Block.__(0, [$$String.concat("", List.map((function (param) {
@@ -185,7 +224,7 @@ function Make(Ctx) {
                                                 } else {
                                                   return param[0];
                                                 }
-                                              }), match$8[0]))])]);
+                                              }), match$9[0]))])]);
                     }
                   } else {
                     return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
@@ -198,10 +237,12 @@ function Make(Ctx) {
           }
         }
       } else {
-        return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+        return /* Result */Block.__(0, [src]);
       }
-    } else {
+    } else if (isValid(src[0])) {
       return /* Result */Block.__(0, [src]);
+    } else {
+      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
     }
   };
   return /* module */[/* eval */$$eval];
@@ -211,5 +252,6 @@ exports.Imposible = Imposible;
 exports.Invalid = Invalid;
 exports.DefineMap = DefineMap;
 exports.$eq$eq$great = $eq$eq$great;
+exports.isValid = isValid;
 exports.Make = Make;
 /* DefineMap Not a pure module */
