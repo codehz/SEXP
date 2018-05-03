@@ -33,7 +33,7 @@ function Make(Ctx) {
                   return /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]);
                 }
             case "debug" : 
-                Curry._2(Ctx[/* write */1], ctx, /* List */Block.__(1, [match[1]]));
+                Curry._2(Ctx[/* << */1], ctx, /* List */Block.__(1, [match[1]]));
                 return /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]);
             case "quote" : 
                 var match$2 = match[1];

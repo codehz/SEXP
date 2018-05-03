@@ -19,28 +19,28 @@ function clear(self) {
   return Curry._1(self[/* send */3], /* ClearBuffer */0);
 }
 
-function write(self, text) {
+function $less$less(self, text) {
   return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
                 text,
                 "output"
               ]));
 }
 
-function prompt(self, prompt$1, callback) {
-  return Curry._1(self[/* send */3], /* Prompt */Block.__(1, [
-                prompt$1,
+function $great$great(param, callback) {
+  return Curry._1(param[0][/* send */3], /* Prompt */Block.__(1, [
+                param[1],
                 callback
               ]));
 }
 
-function define(self, name, body) {
+function $less$eq$eq(self, param) {
   return Curry._1(self[/* send */3], /* Define */Block.__(2, [
-                name,
-                body
+                param[0],
+                param[1]
               ]));
 }
 
-function acquire(self, name) {
+function $eq$eq$great(self, name) {
   var exit = 0;
   var modu;
   try {
@@ -62,10 +62,10 @@ function acquire(self, name) {
 
 var EvelInstance = Eval$ReactTemplate.Make(/* module */[
       /* clear */clear,
-      /* write */write,
-      /* prompt */prompt,
-      /* define */define,
-      /* acquire */acquire
+      /* << */$less$less,
+      /* >> */$great$great,
+      /* <== */$less$eq$eq,
+      /* ==> */$eq$eq$great
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");

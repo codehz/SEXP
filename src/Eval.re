@@ -11,13 +11,15 @@ type definition = {
 
 type define = DefineMap.t(definition);
 
+type promptPack('t) = Prompt('t, string);
+
 module type Context = {
   type t;
   let clear: t => unit;
-  let write: (t, SExp.t) => unit;
-  let prompt: (t, string, SExp.t => unit) => unit;
-  let define: (t, DefineMap.key, definition) => unit;
-  let acquire: (t, DefineMap.key) => option(definition);
+  let (<<): (t, SExp.t) => unit;
+  let (>>): (promptPack(t), SExp.t => unit) => unit;
+  let (<==): (t, (DefineMap.key, definition)) => unit;
+  let (==>): (t, DefineMap.key) => option(definition);
 };
 
 type result =
@@ -43,11 +45,11 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
         |> (x => SExp.Atom(x)),
       )
     | SExp.List([SExp.Atom("debug"), ...next]) => {
-        Ctx.write(ctx, SExp.List(next));
+        Ctx.(ctx << SExp.List(next));
         Result(SExp.List([]));
       }
     | SExp.List([SExp.Atom("clear")]) => {
-        Ctx.clear(ctx);
+      ctx |> Ctx.clear;
         Result(SExp.List([]));
       }
     | _ => Error(SExp.Atom("NotFound"));

@@ -33,12 +33,12 @@ module EvelInstance =
     {
       type t = self(state, noRetainedProps, action);
       let clear = self => ClearBuffer |> self.send;
-      let write = (self, text) => AppendBuffer(text, "output") |> self.send;
-      let prompt = (self, prompt, callback) =>
+      let (<<) = (self, text) => AppendBuffer(text, "output") |> self.send;
+      let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
-      let define = (self, name, body) =>
+      let (<==) = (self, (name, body)) =>
         Define(name, body) |> self.send;
-      let acquire = (self, name) =>
+      let (==>) = (self, name) =>
         switch (Eval.DefineMap.find(name, self.state.mods)) {
         | modu => Some(modu)
         | exception Not_found => None
