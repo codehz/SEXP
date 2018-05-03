@@ -36,9 +36,8 @@ module EvelInstance =
       let (<<) = (self, text) => AppendBuffer(text, "output") |> self.send;
       let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
-      let (<~) = (self, (name, body)) =>
-        Define(name, body) |> self.send;
-      let (?=) = (self, name) =>
+      let (<~) = (self, (name, body)) => Define(name, body) |> self.send;
+      let (%) = (self, name) =>
         switch (Eval.DefineMap.find(name, self.state.mods)) {
         | modu => Some(modu)
         | exception Not_found => None
@@ -77,7 +76,19 @@ let make = _children => {
     | Update(minibuffer) => Update({...state, minibuffer})
     | Execute =>
       UpdateWithSideEffects(
-        {...state, minibuffer: SExp.empty, prompt: None},
+        {
+          ...state,
+          buffer: [
+            {
+              data: state.minibuffer,
+              source: "input",
+              time: Js.Date.make() |> Js.Date.toDateString,
+            },
+            ...state.buffer,
+          ],
+          minibuffer: SExp.empty,
+          prompt: None,
+        },
         (
           self =>
             switch (state.prompt) {

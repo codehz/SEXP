@@ -41,7 +41,7 @@ function $less$tilde(self, param) {
               ]));
 }
 
-function $unknown$eq(self, name) {
+function $percent(self, name) {
   var exit = 0;
   var modu;
   try {
@@ -66,7 +66,7 @@ var EvelInstance = Eval$ReactTemplate.Make(/* module */[
       /* << */$less$less,
       /* >> */$great$great,
       /* <~ */$less$tilde,
-      /* ?= */$unknown$eq
+      /* % */$percent
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");
@@ -165,7 +165,14 @@ function make$1() {
                 } else {
                   return /* UpdateWithSideEffects */Block.__(2, [
                             /* record */[
-                              /* buffer */state[/* buffer */0],
+                              /* buffer : :: */[
+                                /* record */[
+                                  /* data */state[/* minibuffer */2],
+                                  /* source */"input",
+                                  /* time */new Date().toDateString()
+                                ],
+                                state[/* buffer */0]
+                              ],
                               /* mods */state[/* mods */1],
                               /* minibuffer */SExp$ReactTemplate.empty,
                               /* prompt : None */0

@@ -151,67 +151,84 @@ function Make(Ctx) {
                       return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                     }
                   } else {
-                    var body$1 = match$3[1];
-                    var name$1 = match$4[0];
-                    Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
-                          name$1,
-                          /* record */[
-                            /* params : [] */0,
-                            /* body */body$1
-                          ]
-                        ]);
-                    return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
-                                    /* Atom */Block.__(0, ["defined"]),
-                                    /* :: */[
-                                      /* List */Block.__(1, [/* :: */[
-                                            /* Atom */Block.__(0, ["quote"]),
+                    var match$7 = match$3[1];
+                    if (match$7) {
+                      if (match$7[1]) {
+                        return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                      } else {
+                        var name$1 = match$4[0];
+                        var err = $$eval(ctx, match$7[0]);
+                        if (err.tag) {
+                          return err;
+                        } else {
+                          var rst = err[0];
+                          Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
+                                name$1,
+                                /* record */[
+                                  /* params : [] */0,
+                                  /* body : :: */[
+                                    rst,
+                                    /* [] */0
+                                  ]
+                                ]
+                              ]);
+                          return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
+                                          /* Atom */Block.__(0, ["defined"]),
+                                          /* :: */[
+                                            /* List */Block.__(1, [/* :: */[
+                                                  /* Atom */Block.__(0, ["quote"]),
+                                                  /* :: */[
+                                                    /* Atom */Block.__(0, [name$1]),
+                                                    /* [] */0
+                                                  ]
+                                                ]]),
                                             /* :: */[
-                                              /* Atom */Block.__(0, [name$1]),
-                                              /* [] */0
-                                            ]
-                                          ]]),
-                                      /* :: */[
-                                        /* List */Block.__(1, [/* :: */[
-                                              /* Atom */Block.__(0, ["quote"]),
+                                              /* List */Block.__(1, [/* :: */[
+                                                    /* Atom */Block.__(0, ["quote"]),
+                                                    /* :: */[
+                                                      /* List */Block.__(1, [/* [] */0]),
+                                                      /* [] */0
+                                                    ]
+                                                  ]]),
                                               /* :: */[
-                                                /* List */Block.__(1, [/* [] */0]),
+                                                /* List */Block.__(1, [/* :: */[
+                                                      /* Atom */Block.__(0, ["quote"]),
+                                                      /* :: */[
+                                                        rst,
+                                                        /* [] */0
+                                                      ]
+                                                    ]]),
                                                 /* [] */0
                                               ]
-                                            ]]),
-                                        /* :: */[
-                                          /* List */Block.__(1, [/* :: */[
-                                                /* Atom */Block.__(0, ["quote"]),
-                                                /* :: */[
-                                                  /* List */Block.__(1, [body$1]),
-                                                  /* [] */0
-                                                ]
-                                              ]]),
-                                          /* [] */0
-                                        ]
-                                      ]
-                                    ]
-                                  ]])]);
+                                            ]
+                                          ]
+                                        ]])]);
+                        }
+                      }
+                    } else {
+                      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                    }
                   }
                 } else {
                   return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                 }
             case "quote" : 
-                var match$7 = match[1];
-                if (match$7) {
-                  if (match$7[1]) {
+                var match$8 = match[1];
+                if (match$8) {
+                  if (match$8[1]) {
                     return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                   } else {
-                    return /* Result */Block.__(0, [match$7[0]]);
+                    return /* Result */Block.__(0, [match$8[0]]);
                   }
                 } else {
                   return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                 }
             case "string" : 
-                var match$8 = match[1];
-                if (match$8) {
-                  var match$9 = match$8[0];
-                  if (match$9.tag) {
-                    if (match$8[1]) {
+                var match$9 = match[1];
+                if (match$9) {
+                  var match$10 = match$9[0];
+                  if (match$10.tag) {
+                    if (match$9[1]) {
                       return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                     } else {
                       return /* Result */Block.__(0, [/* Atom */Block.__(0, [$$String.concat("", List.map((function (param) {
@@ -224,7 +241,7 @@ function Make(Ctx) {
                                                 } else {
                                                   return param[0];
                                                 }
-                                              }), match$9[0]))])]);
+                                              }), match$10[0]))])]);
                     }
                   } else {
                     return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
@@ -239,10 +256,45 @@ function Make(Ctx) {
       } else {
         return /* Result */Block.__(0, [src]);
       }
-    } else if (isValid(src[0])) {
-      return /* Result */Block.__(0, [src]);
     } else {
-      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+      var name$2 = src[0];
+      if (isValid(name$2)) {
+        return /* Result */Block.__(0, [src]);
+      } else {
+        var match$11 = Curry._2(Ctx[/* % */4], ctx, name$2);
+        if (match$11) {
+          var match$12 = match$11[0];
+          var params$1 = match$12[/* params */0];
+          var exit = 0;
+          if (params$1) {
+            exit = 1;
+          } else {
+            var match$13 = match$12[/* body */1];
+            if (match$13 && !match$13[1]) {
+              return /* Result */Block.__(0, [match$13[0]]);
+            } else {
+              exit = 1;
+            }
+          }
+          if (exit === 1) {
+            return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
+                            /* Atom */Block.__(0, ["lambda"]),
+                            /* :: */[
+                              /* List */Block.__(1, [List.map((function (x) {
+                                          return /* Atom */Block.__(0, [x]);
+                                        }), params$1)]),
+                              /* :: */[
+                                /* List */Block.__(1, [match$12[/* body */1]]),
+                                /* [] */0
+                              ]
+                            ]
+                          ]])]);
+          }
+          
+        } else {
+          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["SymbolNotFound"])]);
+        }
+      }
     }
   };
   return /* module */[/* eval */$$eval];

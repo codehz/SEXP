@@ -22,7 +22,7 @@ module type Context = {
   let (<<): (t, SExp.t) => unit;
   let (>>): (promptPack(t), SExp.t => unit) => unit;
   let (<~): (t, (DefineMap.key, definition)) => unit;
-  let (?=): (t, DefineMap.key) => option(definition);
+  let (%): (t, DefineMap.key) => option(definition);
 };
 
 type result =
@@ -43,6 +43,19 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
     fun
     | SExp.List([]) as src => Result(src)
     | SExp.Atom(name) as src when isValid(name) => Result(src)
+    | SExp.Atom(name) =>
+      switch (Ctx.(ctx % name)) {
+      | Some({params: [], body: [hd]}) => Result(hd)
+      | Some({params, body}) =>
+        Result(
+          SExp.List([
+            SExp.Atom("lambda"),
+            SExp.List(params |> List.map(x => SExp.Atom(x))),
+            SExp.List(body),
+          ]),
+        )
+      | _ => Error(SExp.Atom("SymbolNotFound"))
+      }
     | SExp.List([SExp.Atom("quote"), next]) => Result(next)
     | SExp.List([SExp.Atom("string"), SExp.List(list)]) =>
       Result(
@@ -118,16 +131,19 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
       } else {
         Error(SExp.Atom("InvalidDefine"));
       }
-    | SExp.List([SExp.Atom("define"), SExp.Atom(name), ...body]) => {
-        Ctx.(ctx <~ (name, [] ==> body));
+    | SExp.List([SExp.Atom("define"), SExp.Atom(name), body]) =>
+      switch (eval(ctx, body)) {
+      | Result(rst) =>
+        Ctx.(ctx <~ (name, [] ==> [rst]));
         Result(
           SExp.List([
             SExp.Atom("defined"),
             SExp.List([SExp.Atom("quote"), SExp.Atom(name)]),
             SExp.List([SExp.Atom("quote"), SExp.List([])]),
-            SExp.List([SExp.Atom("quote"), SExp.List(body)]),
+            SExp.List([SExp.Atom("quote"), rst]),
           ]),
         );
+      | err => err
       }
     | _ => Error(SExp.Atom("NotFound"));
 };
