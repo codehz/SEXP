@@ -8,109 +8,311 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var $$String = require("bs-platform/lib/js/string.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var SExp$ReactTemplate = require("./SExp.bs.js");
+var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 
 var Imposible = Caml_exceptions.create("Eval-ReactTemplate.Imposible");
 
 var Invalid = Caml_exceptions.create("Eval-ReactTemplate.Invalid");
 
-var DefineMap = $$Map.Make([$$String.compare]);
-
-function $eq$eq$great(params, body) {
-  return /* record */[
-          /* params */params,
-          /* body */body
-        ];
-}
+var $great$eq$great = List.rev_append;
 
 function isValid(text) {
   return (/(?:-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?:true|false)|null/g).test(text);
 }
 
+function isOperator(text) {
+  return (/\+|-|\*|\/|<|>/g).test(text);
+}
+
+var jseval = function (op,a,b){return eval(a+op+b)+''};
+
+var isTrue = Curry._1(function (x,a){return !!b}, 0);
+
 function Make(Ctx) {
   $$Map.Make([$$String.compare]);
-  var $$eval = function (ctx, src) {
-    if (src.tag) {
-      var match = src[0];
-      if (match) {
-        var match$1 = match[0];
-        if (match$1.tag) {
-          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-        } else {
-          switch (match$1[0]) {
-            case "clear" : 
-                if (match[1]) {
-                  return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                } else {
-                  Curry._1(Ctx[/* clear */0], ctx);
-                  return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
-                }
-            case "debug" : 
-                var vals = List.fold_left((function (p, a) {
-                        var exit = 0;
-                        if (p.tag) {
-                          return p;
-                        } else {
-                          var match = p[0];
-                          if (match.tag && !a.tag) {
-                            return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
-                                            a[0],
-                                            match[0]
-                                          ]])]);
-                          } else {
-                            exit = 1;
-                          }
-                        }
-                        if (exit === 1) {
-                          if (a.tag) {
-                            return a;
-                          } else {
-                            return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidEval"])]);
-                          }
-                        }
-                        
-                      }), /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]), List.map((function (param) {
-                            return $$eval(ctx, param);
-                          }), match[1]));
-                if (vals.tag) {
-                  return vals;
-                } else {
-                  var match$2 = vals[0];
-                  if (match$2.tag) {
-                    Curry._2(Ctx[/* << */1], ctx, /* List */Block.__(1, [List.rev(match$2[0])]));
-                    return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
+  var evalList = function (ctx, env, list) {
+    var err = List.fold_left((function (p, a) {
+            var exit = 0;
+            if (p.tag) {
+              return p;
+            } else {
+              var match = p[0];
+              if (match.tag && !a.tag) {
+                return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
+                                a[0],
+                                match[0]
+                              ]])]);
+              } else {
+                exit = 1;
+              }
+            }
+            if (exit === 1) {
+              if (a.tag) {
+                return a;
+              } else {
+                return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidEval"])]);
+              }
+            }
+            
+          }), /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]), List.map((function (param) {
+                return $$eval(ctx, env, param);
+              }), list));
+    if (err.tag) {
+      return err;
+    } else {
+      var match = err[0];
+      if (match.tag) {
+        return /* Result */Block.__(0, [/* List */Block.__(1, [List.rev(match[0])])]);
+      } else {
+        throw Invalid;
+      }
+    }
+  };
+  var $$eval = function (ctx, env, _src) {
+    while(true) {
+      var src = _src;
+      if (src.tag) {
+        var match = src[0];
+        if (match) {
+          var list = match[0];
+          if (list.tag) {
+            var err = $$eval(ctx, env, list);
+            if (err.tag) {
+              return err;
+            } else {
+              _src = /* List */Block.__(1, [/* :: */[
+                    err[0],
+                    match[1]
+                  ]]);
+              continue ;
+            }
+          } else {
+            var sp = list[0];
+            var exit = 0;
+            switch (sp) {
+              case "clear" : 
+                  if (match[1]) {
+                    exit = 1;
                   } else {
-                    throw Invalid;
+                    Curry._1(Ctx[/* clear */0], ctx);
+                    return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
                   }
-                }
-            case "define" : 
-                var match$3 = match[1];
-                if (match$3) {
-                  var match$4 = match$3[0];
-                  if (match$4.tag) {
+                  break;
+              case "debug" : 
+                  var err$1 = evalList(ctx, env, match[1]);
+                  if (err$1.tag) {
+                    return err$1;
+                  } else {
+                    Curry._2(Ctx[/* << */1], ctx, err$1[0]);
+                    return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
+                  }
+              case "dump" : 
+                  if (match[1]) {
+                    exit = 1;
+                  } else {
+                    return /* Result */Block.__(0, [/* List */Block.__(1, [List.map((function (param) {
+                                          return /* List */Block.__(1, [/* :: */[
+                                                      /* Atom */Block.__(0, [param[0]]),
+                                                      /* :: */[
+                                                        param[1],
+                                                        /* [] */0
+                                                      ]
+                                                    ]]);
+                                        }), env)])]);
+                  }
+                  break;
+              case "eval" : 
+                  return evalList(ctx, env, match[1]);
+              case "let" : 
+                  var match$1 = match[1];
+                  if (match$1) {
+                    var match$2 = match$1[0];
+                    if (match$2.tag) {
+                      var loop = function (_prev, _param) {
+                        while(true) {
+                          var param = _param;
+                          var prev = _prev;
+                          if (param) {
+                            var match = param[0];
+                            if (match.tag) {
+                              var match$1 = match[0];
+                              if (match$1) {
+                                var match$2 = match$1[0];
+                                if (match$2.tag) {
+                                  throw Invalid;
+                                } else {
+                                  var match$3 = match$1[1];
+                                  if (match$3) {
+                                    if (match$3[1]) {
+                                      throw Invalid;
+                                    } else {
+                                      _param = param[1];
+                                      _prev = /* :: */[
+                                        /* tuple */[
+                                          match$2[0],
+                                          match$3[0]
+                                        ],
+                                        prev
+                                      ];
+                                      continue ;
+                                    }
+                                  } else {
+                                    throw Invalid;
+                                  }
+                                }
+                              } else {
+                                throw Invalid;
+                              }
+                            } else {
+                              throw Invalid;
+                            }
+                          } else {
+                            return prev;
+                          }
+                        };
+                      };
+                      var exit$1 = 0;
+                      var nenv;
+                      try {
+                        nenv = loop(env, match$2[0]);
+                        exit$1 = 2;
+                      }
+                      catch (exn){
+                        if (exn === Invalid) {
+                          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidLet"])]);
+                        } else {
+                          throw exn;
+                        }
+                      }
+                      if (exit$1 === 2) {
+                        var _param = match$1[1];
+                        while(true) {
+                          var param = _param;
+                          if (param) {
+                            var tl = param[1];
+                            var only = param[0];
+                            if (tl) {
+                              $$eval(ctx, nenv, only);
+                              _param = tl;
+                              continue ;
+                            } else {
+                              return $$eval(ctx, nenv, only);
+                            }
+                          } else {
+                            return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidLetBody"])]);
+                          }
+                        };
+                      }
+                      
+                    } else {
+                      exit = 1;
+                    }
+                  } else {
+                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                  }
+                  break;
+              case "quote" : 
+                  var match$3 = match[1];
+                  if (match$3) {
+                    if (match$3[1]) {
+                      exit = 1;
+                    } else {
+                      return /* Result */Block.__(0, [match$3[0]]);
+                    }
+                  } else {
+                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                  }
+                  break;
+              case "string" : 
+                  var match$4 = match[1];
+                  if (match$4) {
                     var match$5 = match$4[0];
-                    if (match$5) {
-                      var match$6 = match$5[0];
-                      if (match$6.tag) {
+                    if (match$5.tag && !match$4[1]) {
+                      return /* Result */Block.__(0, [/* Atom */Block.__(0, [$$String.concat("", List.map((function (param) {
+                                                if (param.tag) {
+                                                  if (param[0]) {
+                                                    return "";
+                                                  } else {
+                                                    return " ";
+                                                  }
+                                                } else {
+                                                  return param[0];
+                                                }
+                                              }), match$5[0]))])]);
+                    } else {
+                      exit = 1;
+                    }
+                  } else {
+                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                  }
+                  break;
+              default:
+                exit = 1;
+            }
+            if (exit === 1) {
+              var match$6 = match[1];
+              if (match$6) {
+                var match$7 = match$6[1];
+                if (match$7) {
+                  if (match$7[1]) {
+                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                  } else {
+                    var b = match$7[0];
+                    var a = match$6[0];
+                    if (isOperator(sp)) {
+                      var proc = (function(a){
+                      return function proc(fn, x) {
+                        var err = $$eval(ctx, env, x);
+                        if (err.tag) {
+                          return err;
+                        } else {
+                          var match = err[0];
+                          var exit = 0;
+                          if (match.tag) {
+                            exit = 1;
+                          } else {
+                            var xv = match[0];
+                            if (isValid(xv)) {
+                              return Curry._1(fn, xv);
+                            } else {
+                              exit = 1;
+                            }
+                          }
+                          if (exit === 1) {
+                            return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                                            /* Atom */Block.__(0, ["FailedToConvert"]),
+                                            /* :: */[
+                                              a,
+                                              /* [] */0
+                                            ]
+                                          ]])]);
+                          }
+                          
+                        }
+                      }
+                      }(a));
+                      return proc((function(sp,b){
+                                return function (av) {
+                                  return proc((function (bv) {
+                                                return /* Result */Block.__(0, [/* Atom */Block.__(0, [jseval(sp, av, bv)])]);
+                                              }), b);
+                                }
+                                }(sp,b)), a);
+                    } else if (sp === "define") {
+                      var match$8 = match[1];
+                      var match$9 = match$8[0];
+                      if (match$9.tag) {
                         return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                       } else {
-                        var body = match$3[1];
-                        var params = match$5[1];
-                        var name = match$6[0];
-                        if (List.for_all((function (param) {
-                                  return param.tag ? false : true;
-                                }), params)) {
+                        var name = match$9[0];
+                        var err$2 = $$eval(ctx, env, match$8[1][0]);
+                        if (err$2.tag) {
+                          return err$2;
+                        } else {
+                          var rst = err$2[0];
                           Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
                                 name,
-                                /* record */[
-                                  /* params */List.map((function (param) {
-                                          if (param.tag) {
-                                            throw Invalid;
-                                          } else {
-                                            return param[0];
-                                          }
-                                        }), params),
-                                  /* body */body
-                                ]
+                                rst
                               ]);
                           return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
                                           /* Atom */Block.__(0, ["defined"]),
@@ -123,83 +325,8 @@ function Make(Ctx) {
                                                   ]
                                                 ]]),
                                             /* :: */[
-                                              /* List */Block.__(1, [/* :: */[
-                                                    /* Atom */Block.__(0, ["quote"]),
-                                                    /* :: */[
-                                                      /* List */Block.__(1, [params]),
-                                                      /* [] */0
-                                                    ]
-                                                  ]]),
-                                              /* :: */[
-                                                /* List */Block.__(1, [/* :: */[
-                                                      /* Atom */Block.__(0, ["quote"]),
-                                                      /* :: */[
-                                                        /* List */Block.__(1, [body]),
-                                                        /* [] */0
-                                                      ]
-                                                    ]]),
-                                                /* [] */0
-                                              ]
-                                            ]
-                                          ]
-                                        ]])]);
-                        } else {
-                          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["InvalidDefine"])]);
-                        }
-                      }
-                    } else {
-                      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                    }
-                  } else {
-                    var match$7 = match$3[1];
-                    if (match$7) {
-                      if (match$7[1]) {
-                        return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                      } else {
-                        var name$1 = match$4[0];
-                        var err = $$eval(ctx, match$7[0]);
-                        if (err.tag) {
-                          return err;
-                        } else {
-                          var rst = err[0];
-                          Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
-                                name$1,
-                                /* record */[
-                                  /* params : [] */0,
-                                  /* body : :: */[
-                                    rst,
-                                    /* [] */0
-                                  ]
-                                ]
-                              ]);
-                          return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
-                                          /* Atom */Block.__(0, ["defined"]),
-                                          /* :: */[
-                                            /* List */Block.__(1, [/* :: */[
-                                                  /* Atom */Block.__(0, ["quote"]),
-                                                  /* :: */[
-                                                    /* Atom */Block.__(0, [name$1]),
-                                                    /* [] */0
-                                                  ]
-                                                ]]),
-                                            /* :: */[
-                                              /* List */Block.__(1, [/* :: */[
-                                                    /* Atom */Block.__(0, ["quote"]),
-                                                    /* :: */[
-                                                      /* List */Block.__(1, [/* [] */0]),
-                                                      /* [] */0
-                                                    ]
-                                                  ]]),
-                                              /* :: */[
-                                                /* List */Block.__(1, [/* :: */[
-                                                      /* Atom */Block.__(0, ["quote"]),
-                                                      /* :: */[
-                                                        rst,
-                                                        /* [] */0
-                                                      ]
-                                                    ]]),
-                                                /* [] */0
-                                              ]
+                                              rst,
+                                              /* [] */0
                                             ]
                                           ]
                                         ]])]);
@@ -212,104 +339,56 @@ function Make(Ctx) {
                 } else {
                   return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
                 }
-            case "quote" : 
-                var match$8 = match[1];
-                if (match$8) {
-                  if (match$8[1]) {
-                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                  } else {
-                    return /* Result */Block.__(0, [match$8[0]]);
-                  }
-                } else {
-                  return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                }
-            case "string" : 
-                var match$9 = match[1];
-                if (match$9) {
-                  var match$10 = match$9[0];
-                  if (match$10.tag) {
-                    if (match$9[1]) {
-                      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                    } else {
-                      return /* Result */Block.__(0, [/* Atom */Block.__(0, [$$String.concat("", List.map((function (param) {
-                                                if (param.tag) {
-                                                  if (param[0]) {
-                                                    return "";
-                                                  } else {
-                                                    return " ";
-                                                  }
-                                                } else {
-                                                  return param[0];
-                                                }
-                                              }), match$10[0]))])]);
-                    }
-                  } else {
-                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                  }
-                } else {
-                  return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
-                }
-            default:
-              return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+              } else {
+                return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+              }
+            }
+            
           }
+        } else {
+          return /* Result */Block.__(0, [src]);
         }
       } else {
-        return /* Result */Block.__(0, [src]);
-      }
-    } else {
-      var name$2 = src[0];
-      if (isValid(name$2)) {
-        return /* Result */Block.__(0, [src]);
-      } else {
-        var match$11 = Curry._2(Ctx[/* % */4], ctx, name$2);
-        if (match$11) {
-          var match$12 = match$11[0];
-          var params$1 = match$12[/* params */0];
-          var exit = 0;
-          if (params$1) {
-            exit = 1;
-          } else {
-            var match$13 = match$12[/* body */1];
-            if (match$13 && !match$13[1]) {
-              return /* Result */Block.__(0, [match$13[0]]);
-            } else {
-              exit = 1;
-            }
+        var name$1 = src[0];
+        if (isValid(name$1)) {
+          return /* Result */Block.__(0, [src]);
+        } else {
+          var exit$2 = 0;
+          var data;
+          try {
+            data = List.assoc(name$1, env);
+            exit$2 = 1;
           }
-          if (exit === 1) {
-            return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
-                            /* Atom */Block.__(0, ["lambda"]),
-                            /* :: */[
-                              /* List */Block.__(1, [List.map((function (x) {
-                                          return /* Atom */Block.__(0, [x]);
-                                        }), params$1)]),
+          catch (exn$1){
+            if (exn$1 === Caml_builtin_exceptions.not_found) {
+              return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                              /* Atom */Block.__(0, ["SymbolNotFound"]),
                               /* :: */[
-                                /* List */Block.__(1, [match$12[/* body */1]]),
+                                /* Atom */Block.__(0, [name$1]),
                                 /* [] */0
                               ]
-                            ]
-                          ]])]);
+                            ]])]);
+            } else {
+              throw exn$1;
+            }
+          }
+          if (exit$2 === 1) {
+            return /* Result */Block.__(0, [data]);
           }
           
-        } else {
-          return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
-                          /* Atom */Block.__(0, ["SymbolNotFound"]),
-                          /* :: */[
-                            /* Atom */Block.__(0, [name$2]),
-                            /* [] */0
-                          ]
-                        ]])]);
         }
       }
-    }
+    };
   };
   return /* module */[/* eval */$$eval];
 }
 
 exports.Imposible = Imposible;
 exports.Invalid = Invalid;
-exports.DefineMap = DefineMap;
-exports.$eq$eq$great = $eq$eq$great;
+exports.$great$eq$great = $great$eq$great;
 exports.isValid = isValid;
+exports.isOperator = isOperator;
+exports.jseval = jseval;
+exports.isTrue = isTrue;
 exports.Make = Make;
-/* DefineMap Not a pure module */
+/* isTrue Not a pure module */

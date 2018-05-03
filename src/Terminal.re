@@ -11,9 +11,11 @@ type prompt = {
   handler: SExp.t => unit,
 };
 
+module StringMap = Map.Make(String);
+
 type state = {
   buffer: list(line),
-  mods: Eval.define,
+  mods: StringMap.t(SExp.t),
   minibuffer: SExp.t,
   prompt: option(prompt),
 };
@@ -22,7 +24,7 @@ type action =
   | ClearBuffer
   | AppendBuffer(SExp.t, string)
   | Prompt(string, SExp.t => unit)
-  | Define(string, Eval.definition)
+  | Define(string, SExp.t)
   | Execute
   | Update(SExp.t);
 
@@ -37,11 +39,6 @@ module EvelInstance =
       let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
       let (<~) = (self, (name, body)) => Define(name, body) |> self.send;
-      let (%) = (self, name) =>
-        switch (Eval.DefineMap.find(name, self.state.mods)) {
-        | modu => Some(modu)
-        | exception Not_found => None
-        };
     },
   );
 
@@ -58,7 +55,7 @@ let make = _children => {
   ...component,
   initialState: () => {
     buffer: [],
-    mods: Eval.DefineMap.empty,
+    mods: StringMap.empty,
     minibuffer: SExp.empty,
     prompt: None,
   },
@@ -93,7 +90,7 @@ let make = _children => {
           self =>
             switch (state.prompt) {
             | None =>
-              switch (EvelInstance.eval(self, state.minibuffer)) {
+              switch (EvelInstance.eval(self, state.mods |> StringMap.bindings , state.minibuffer)) {
               | Eval.Result(exp) => AppendBuffer(exp, "result") |> self.send
               | Eval.Error(exp) => AppendBuffer(exp, "error") |> self.send
               }
@@ -104,7 +101,7 @@ let make = _children => {
     | Prompt(indicator, handler) =>
       Update({...state, prompt: Some({indicator, handler})})
     | Define(name, body) =>
-      Update({...state, mods: state.mods |> Eval.DefineMap.add(name, body)})
+      Update({...state, mods: state.mods |> StringMap.add(name, body)})
     },
   render: self => {
     let {buffer, minibuffer, prompt} = self.state;
