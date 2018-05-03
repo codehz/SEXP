@@ -1,0 +1,30 @@
+{
+  "name": "sexp",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "start:dev": "webpack-serve -w",
+    "clean": "bsb -clean-world",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack -w",
+    "webpack:production": "NODE_ENV=production webpack"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bitbar-webpack-progress-plugin": "^1.0.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "reason-react": "^0.4.0",
+    "webpack-serve": "^0.3.2"
+  },
+  "devDependencies": {
+    "bs-platform": "^3.0.0",
+    "webpack": "^4.0.1",
+    "webpack-cli": "^2.0.10"
+  }
+}
