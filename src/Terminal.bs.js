@@ -9,6 +9,7 @@ var React = require("react");
 var $$String = require("bs-platform/lib/js/string.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Eval$ReactTemplate = require("./Eval.bs.js");
+var SExp$ReactTemplate = require("./SExp.bs.js");
 var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 var SExpEditor$ReactTemplate = require("./SExpEditor.bs.js");
 var SExpViewer$ReactTemplate = require("./SExpViewer.bs.js");
@@ -147,7 +148,7 @@ function make$1() {
               return /* record */[
                       /* buffer : [] */0,
                       /* mods */Eval$ReactTemplate.DefineMap[/* empty */0],
-                      /* minibuffer : List */Block.__(1, [/* [] */0]),
+                      /* minibuffer */SExp$ReactTemplate.empty,
                       /* prompt : None */0
                     ];
             }),
@@ -166,7 +167,7 @@ function make$1() {
                             /* record */[
                               /* buffer */state[/* buffer */0],
                               /* mods */state[/* mods */1],
-                              /* minibuffer : List */Block.__(1, [/* [] */0]),
+                              /* minibuffer */SExp$ReactTemplate.empty,
                               /* prompt : None */0
                             ],
                             (function (self) {

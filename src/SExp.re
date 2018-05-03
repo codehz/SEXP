@@ -2,6 +2,8 @@ type t =
   | Atom(string)
   | List(list(t));
 
+let empty = List([]);
+
 let rec toString =
   fun
   | Atom(str) => str

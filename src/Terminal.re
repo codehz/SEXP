@@ -60,7 +60,7 @@ let make = _children => {
   initialState: () => {
     buffer: [],
     mods: Eval.DefineMap.empty,
-    minibuffer: SExp.List([]),
+    minibuffer: SExp.empty,
     prompt: None,
   },
   reducer: (action, state) =>
@@ -77,7 +77,7 @@ let make = _children => {
     | Update(minibuffer) => Update({...state, minibuffer})
     | Execute =>
       UpdateWithSideEffects(
-        {...state, minibuffer: SExp.List([]), prompt: None},
+        {...state, minibuffer: SExp.empty, prompt: None},
         (
           self =>
             switch (state.prompt) {

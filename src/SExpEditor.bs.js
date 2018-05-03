@@ -11,6 +11,7 @@ var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
+var SExp$ReactTemplate = require("./SExp.bs.js");
 var ContentEditable$ReactTemplate = require("./ContentEditable.bs.js");
 
 function directionToString(param) {
@@ -797,7 +798,7 @@ function make(data, onUpdate, _) {
                                       Curry._1(fn, /* List */Block.__(1, [insertList(/* Atom */Block.__(0, [""]), xpos, List.mapi((function(pos){
                                                       return function (i, item) {
                                                         if (i === pos) {
-                                                          return /* List */Block.__(1, [/* [] */0]);
+                                                          return SExp$ReactTemplate.empty;
                                                         } else {
                                                           return item;
                                                         }

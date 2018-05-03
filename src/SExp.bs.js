@@ -261,6 +261,9 @@ function parse(input) {
   return /* List */Block.__(1, [match[0]]);
 }
 
+var empty = /* List */Block.__(1, [/* [] */0]);
+
+exports.empty = empty;
 exports.toString = toString;
 exports.parse = parse;
 /* No side effect */

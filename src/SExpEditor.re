@@ -252,7 +252,7 @@ let make = (~data: SExp.t, ~onUpdate, _children) => {
                   list
                   |> List.mapi((i, item) =>
                        if (i == pos) {
-                         SExp.List([]);
+                         SExp.empty;
                        } else {
                          item;
                        }
