@@ -13,7 +13,7 @@ type prompt = {
 
 type state = {
   buffer: list(line),
-  mods: Eval.smod,
+  mods: Eval.define,
   minibuffer: SExp.t,
   prompt: option(prompt),
 };
@@ -22,7 +22,7 @@ type action =
   | ClearBuffer
   | AppendBuffer(SExp.t, string)
   | Prompt(string, SExp.t => unit)
-  | DefineModule(string, Eval.definition)
+  | Define(string, Eval.definition)
   | Execute
   | Update(SExp.t);
 
@@ -32,13 +32,14 @@ module EvelInstance =
   Eval.Make(
     {
       type t = self(state, noRetainedProps, action);
+      let clear = self => ClearBuffer |> self.send;
       let write = (self, text) => AppendBuffer(text, "output") |> self.send;
       let prompt = (self, prompt, callback) =>
         Prompt(prompt, callback) |> self.send;
-      let defineModule = (self, name, body) =>
-        DefineModule(name, body) |> self.send;
-      let loadModule = (self, name) =>
-        switch (Eval.SModMap.find(name, self.state.mods)) {
+      let define = (self, name, body) =>
+        Define(name, body) |> self.send;
+      let acquire = (self, name) =>
+        switch (Eval.DefineMap.find(name, self.state.mods)) {
         | modu => Some(modu)
         | exception Not_found => None
         };
@@ -58,7 +59,7 @@ let make = _children => {
   ...component,
   initialState: () => {
     buffer: [],
-    mods: Eval.SModMap.empty,
+    mods: Eval.DefineMap.empty,
     minibuffer: SExp.List([]),
     prompt: None,
   },
@@ -91,7 +92,8 @@ let make = _children => {
       )
     | Prompt(indicator, handler) =>
       Update({...state, prompt: Some({indicator, handler})})
-    | _ => NoUpdate
+    | Define(name, body) =>
+      Update({...state, mods: state.mods |> Eval.DefineMap.add(name, body)})
     },
   render: self => {
     let {buffer, minibuffer, prompt} = self.state;

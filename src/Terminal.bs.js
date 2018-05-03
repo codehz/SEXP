@@ -15,6 +15,10 @@ var SExpViewer$ReactTemplate = require("./SExpViewer.bs.js");
 
 var component = ReasonReact.reducerComponent("Terminal");
 
+function clear(self) {
+  return Curry._1(self[/* send */3], /* ClearBuffer */0);
+}
+
 function write(self, text) {
   return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
                 text,
@@ -29,18 +33,18 @@ function prompt(self, prompt$1, callback) {
               ]));
 }
 
-function defineModule(self, name, body) {
-  return Curry._1(self[/* send */3], /* DefineModule */Block.__(2, [
+function define(self, name, body) {
+  return Curry._1(self[/* send */3], /* Define */Block.__(2, [
                 name,
                 body
               ]));
 }
 
-function loadModule(self, name) {
+function acquire(self, name) {
   var exit = 0;
   var modu;
   try {
-    modu = Curry._2(Eval$ReactTemplate.SModMap[/* find */21], name, self[/* state */1][/* mods */1]);
+    modu = Curry._2(Eval$ReactTemplate.DefineMap[/* find */21], name, self[/* state */1][/* mods */1]);
     exit = 1;
   }
   catch (exn){
@@ -57,10 +61,11 @@ function loadModule(self, name) {
 }
 
 var EvelInstance = Eval$ReactTemplate.Make(/* module */[
+      /* clear */clear,
       /* write */write,
       /* prompt */prompt,
-      /* defineModule */defineModule,
-      /* loadModule */loadModule
+      /* define */define,
+      /* acquire */acquire
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");
@@ -141,7 +146,7 @@ function make$1() {
           /* initialState */(function () {
               return /* record */[
                       /* buffer : [] */0,
-                      /* mods */Eval$ReactTemplate.SModMap[/* empty */0],
+                      /* mods */Eval$ReactTemplate.DefineMap[/* empty */0],
                       /* minibuffer : List */Block.__(1, [/* [] */0]),
                       /* prompt : None */0
                     ];
@@ -212,7 +217,12 @@ function make$1() {
                                     ]]
                                 ]]);
                   case 2 : 
-                      return /* NoUpdate */0;
+                      return /* Update */Block.__(0, [/* record */[
+                                  /* buffer */state[/* buffer */0],
+                                  /* mods */Curry._3(Eval$ReactTemplate.DefineMap[/* add */3], action[0], action[1], state[/* mods */1]),
+                                  /* minibuffer */state[/* minibuffer */2],
+                                  /* prompt */state[/* prompt */3]
+                                ]]);
                   case 3 : 
                       return /* Update */Block.__(0, [/* record */[
                                   /* buffer */state[/* buffer */0],

@@ -2,21 +2,22 @@ exception Imposible;
 
 exception Invalid;
 
-module SModMap = Map.Make(String);
+module DefineMap = Map.Make(String);
 
 type definition = {
   param: list(string),
   body: SExp.t,
 };
 
-type smod = SModMap.t(definition);
+type define = DefineMap.t(definition);
 
 module type Context = {
   type t;
+  let clear: t => unit;
   let write: (t, SExp.t) => unit;
   let prompt: (t, string, SExp.t => unit) => unit;
-  let defineModule: (t, SModMap.key, definition) => unit;
-  let loadModule: (t, SModMap.key) => option(definition);
+  let define: (t, DefineMap.key, definition) => unit;
+  let acquire: (t, DefineMap.key) => option(definition);
 };
 
 type result =
@@ -43,6 +44,10 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
       )
     | SExp.List([SExp.Atom("debug"), ...next]) => {
         Ctx.write(ctx, SExp.List(next));
+        Result(SExp.List([]));
+      }
+    | SExp.List([SExp.Atom("clear")]) => {
+        Ctx.clear(ctx);
         Result(SExp.List([]));
       }
     | _ => Error(SExp.Atom("NotFound"));

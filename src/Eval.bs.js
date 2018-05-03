@@ -12,7 +12,7 @@ var Imposible = Caml_exceptions.create("Eval-ReactTemplate.Imposible");
 
 var Invalid = Caml_exceptions.create("Eval-ReactTemplate.Invalid");
 
-var SModMap = $$Map.Make([$$String.compare]);
+var DefineMap = $$Map.Make([$$String.compare]);
 
 function Make(Ctx) {
   $$Map.Make([$$String.compare]);
@@ -25,8 +25,15 @@ function Make(Ctx) {
           return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
         } else {
           switch (match$1[0]) {
+            case "clear" : 
+                if (match[1]) {
+                  return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                } else {
+                  Curry._1(Ctx[/* clear */0], ctx);
+                  return /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]);
+                }
             case "debug" : 
-                Curry._2(Ctx[/* write */0], ctx, /* List */Block.__(1, [match[1]]));
+                Curry._2(Ctx[/* write */1], ctx, /* List */Block.__(1, [match[1]]));
                 return /* Result */Block.__(0, [/* List */Block.__(1, [/* [] */0])]);
             case "quote" : 
                 var match$2 = match[1];
@@ -81,6 +88,6 @@ function Make(Ctx) {
 
 exports.Imposible = Imposible;
 exports.Invalid = Invalid;
-exports.SModMap = SModMap;
+exports.DefineMap = DefineMap;
 exports.Make = Make;
-/* SModMap Not a pure module */
+/* DefineMap Not a pure module */
