@@ -36,9 +36,9 @@ module EvelInstance =
       let (<<) = (self, text) => AppendBuffer(text, "output") |> self.send;
       let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
-      let (<==) = (self, (name, body)) =>
+      let (<~) = (self, (name, body)) =>
         Define(name, body) |> self.send;
-      let (==>) = (self, name) =>
+      let (?=) = (self, name) =>
         switch (Eval.DefineMap.find(name, self.state.mods)) {
         | modu => Some(modu)
         | exception Not_found => None

@@ -34,14 +34,14 @@ function $great$great(param, callback) {
               ]));
 }
 
-function $less$eq$eq(self, param) {
+function $less$tilde(self, param) {
   return Curry._1(self[/* send */3], /* Define */Block.__(2, [
                 param[0],
                 param[1]
               ]));
 }
 
-function $eq$eq$great(self, name) {
+function $unknown$eq(self, name) {
   var exit = 0;
   var modu;
   try {
@@ -65,8 +65,8 @@ var EvelInstance = Eval$ReactTemplate.Make(/* module */[
       /* clear */clear,
       /* << */$less$less,
       /* >> */$great$great,
-      /* <== */$less$eq$eq,
-      /* ==> */$eq$eq$great
+      /* <~ */$less$tilde,
+      /* ?= */$unknown$eq
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");
