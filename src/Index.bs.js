@@ -7,6 +7,7 @@ var React = require("react");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var SExp$ReactTemplate = require("./SExp.bs.js");
+var Terminal$ReactTemplate = require("./Terminal.bs.js");
 var SExpEditor$ReactTemplate = require("./SExpEditor.bs.js");
 
 var expr = SExp$ReactTemplate.parse("(module test (define (quote main) (println (string (Hello, () world)))))");
@@ -48,7 +49,7 @@ var SyncView = /* module */[
   /* make */make
 ];
 
-ReactDOMRe.renderToElementWithId(ReasonReact.element(/* None */0, /* None */0, make(expr, /* array */[])), "app");
+ReactDOMRe.renderToElementWithId(ReasonReact.element(/* None */0, /* None */0, Terminal$ReactTemplate.make(/* array */[])), "app");
 
 exports.expr = expr;
 exports.SyncView = SyncView;
