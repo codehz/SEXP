@@ -70,6 +70,7 @@ body {
 
 .atom {
   pointer-events: all;
+  white-space: pre-wrap;
 }
 
 .quote {
@@ -236,18 +237,30 @@ pre {
   gap: 5px;
 }
 
+.log.input {
+  background: #ddf;
+}
+
+.log.output {
+  background: #ffd;
+}
+
+.log.result {
+  background: #dfd;
+}
+
+.log.error {
+  background: #fdd;
+}
+
 .log>* {
   grid-column: 1/4;
   justify-self: baseline;
 }
 
-.log>.source {
-  grid-column: 1;
-}
-
 .log>.time {
   grid-column: 3;
-  grid-row: 3;
+  grid-row: 2;
   font-size: small;
   color: #aaa;
 }

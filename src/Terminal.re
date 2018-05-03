@@ -3,7 +3,7 @@ open ReasonReact;
 type line = {
   data: SExp.t,
   source: string,
-  time: string,
+  time: Js.Date.t,
 };
 
 type prompt = {
@@ -69,7 +69,7 @@ let make = _children => {
       Update({
         ...state,
         buffer: [
-          {data, source, time: Js.Date.make() |> Js.Date.toDateString},
+          {data, source, time: Js.Date.make()},
           ...state.buffer,
         ],
       })
@@ -82,7 +82,7 @@ let make = _children => {
             {
               data: state.minibuffer,
               source: "input",
-              time: Js.Date.make() |> Js.Date.toDateString,
+              time: Js.Date.make(),
             },
             ...state.buffer,
           ],
@@ -94,7 +94,7 @@ let make = _children => {
             switch (state.prompt) {
             | None =>
               switch (EvelInstance.eval(self, state.minibuffer)) {
-              | Eval.Result(exp) => AppendBuffer(exp, "success") |> self.send
+              | Eval.Result(exp) => AppendBuffer(exp, "result") |> self.send
               | Eval.Error(exp) => AppendBuffer(exp, "error") |> self.send
               }
             | Some({handler}) => handler(state.minibuffer)
@@ -114,9 +114,8 @@ let make = _children => {
         (
           buffer
           |> List.mapi((i, {data: datax, source, time}) =>
-               <div className="log" key=(length - i |> string_of_int)>
-                 <Label clazz=["source"] value=source />
-                 <Label clazz=["time"] value=time />
+               <div className=("log " ++ source) key=(length - i |> string_of_int)>
+                 <Label clazz=["time"] value=(time |> Js.Date.toLocaleString) />
                  <SExpViewer data=datax />
                </div>
              )

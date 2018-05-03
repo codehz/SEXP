@@ -292,7 +292,13 @@ function Make(Ctx) {
           }
           
         } else {
-          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["SymbolNotFound"])]);
+          return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                          /* Atom */Block.__(0, ["SymbolNotFound"]),
+                          /* :: */[
+                            /* Atom */Block.__(0, [name$2]),
+                            /* [] */0
+                          ]
+                        ]])]);
         }
       }
     }

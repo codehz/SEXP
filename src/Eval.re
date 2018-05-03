@@ -54,7 +54,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, SExp.t) => result;} => {
             SExp.List(body),
           ]),
         )
-      | _ => Error(SExp.Atom("SymbolNotFound"))
+      | _ => Error(SExp.List([SExp.Atom("SymbolNotFound"), SExp.Atom(name)]))
       }
     | SExp.List([SExp.Atom("quote"), next]) => Result(next)
     | SExp.List([SExp.Atom("string"), SExp.List(list)]) =>

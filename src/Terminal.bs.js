@@ -123,11 +123,8 @@ function make$1() {
                             }, $$Array.of_list(List.mapi((function (i, param) {
                                         return React.createElement("div", {
                                                     key: String(length - i | 0),
-                                                    className: "log"
-                                                  }, ReasonReact.element(/* None */0, /* None */0, make(param[/* source */1], /* :: */[
-                                                            "source",
-                                                            /* [] */0
-                                                          ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, make(param[/* time */2], /* :: */[
+                                                    className: "log " + param[/* source */1]
+                                                  }, ReasonReact.element(/* None */0, /* None */0, make(param[/* time */2].toLocaleString(), /* :: */[
                                                             "time",
                                                             /* [] */0
                                                           ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, SExpViewer$ReactTemplate.make(param[/* data */0], /* array */[])));
@@ -169,7 +166,7 @@ function make$1() {
                                 /* record */[
                                   /* data */state[/* minibuffer */2],
                                   /* source */"input",
-                                  /* time */new Date().toDateString()
+                                  /* time */new Date()
                                 ],
                                 state[/* buffer */0]
                               ],
@@ -191,7 +188,7 @@ function make$1() {
                                   } else {
                                     return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
                                                   match$1[0],
-                                                  "success"
+                                                  "result"
                                                 ]));
                                   }
                                 }
@@ -206,7 +203,7 @@ function make$1() {
                                     /* record */[
                                       /* data */action[0],
                                       /* source */action[1],
-                                      /* time */new Date().toDateString()
+                                      /* time */new Date()
                                     ],
                                     state[/* buffer */0]
                                   ],
