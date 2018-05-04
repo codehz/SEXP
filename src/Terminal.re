@@ -114,6 +114,7 @@ let make = _children => {
           |> List.mapi((i, {data: datax, source, time}) =>
                <div className=("log " ++ source) key=(length - i |> string_of_int)>
                  <Label clazz=["time"] value=(time |> Js.Date.toLocaleString) />
+                 <Label clazz=["source"] value=(datax |> SExp.toString) />
                  <SExpViewer data=datax />
                </div>
              )

@@ -227,7 +227,7 @@ pre {
 
 .log {
   display: grid;
-  grid-template-columns: max-content 1fr max-content;
+  grid-template-columns: 1fr max-content;
   grid-auto-rows: max-content;
   margin: 5px;
   box-sizing: border-box;
@@ -256,6 +256,11 @@ pre {
 .log>* {
   grid-column: 1/4;
   justify-self: baseline;
+}
+
+.log>.source {
+  grid-column: 1;
+  grid-row: 2;
 }
 
 .log>.time {

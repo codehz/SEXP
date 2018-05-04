@@ -107,13 +107,17 @@ function make$1() {
                         }, React.createElement("div", {
                               className: "buffer"
                             }, $$Array.of_list(List.mapi((function (i, param) {
+                                        var datax = param[/* data */0];
                                         return React.createElement("div", {
                                                     key: String(length - i | 0),
                                                     className: "log " + param[/* source */1]
                                                   }, ReasonReact.element(/* None */0, /* None */0, make(param[/* time */2].toLocaleString(), /* :: */[
                                                             "time",
                                                             /* [] */0
-                                                          ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, SExpViewer$ReactTemplate.make(param[/* data */0], /* array */[])));
+                                                          ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, make(SExp$ReactTemplate.toString(datax), /* :: */[
+                                                            "source",
+                                                            /* [] */0
+                                                          ], /* array */[])), ReasonReact.element(/* None */0, /* None */0, SExpViewer$ReactTemplate.make(datax, /* array */[])));
                                       }), buffer))), React.createElement("div", {
                               className: "mini-buffer"
                             }, prompt ? ReasonReact.element(/* None */0, /* None */0, make(prompt[0][/* indicator */0], /* :: */[
