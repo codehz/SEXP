@@ -147,6 +147,69 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
         );
       | err => err
       }
+    | SExp.List([
+        SExp.Atom("fun"),
+        SExp.List(params),
+        SExp.List([SExp.Atom("let"), SExp.List(vars), ...body]),
+      ]) as src =>
+      Result(src)
+    | SExp.List([SExp.Atom("fun"), SExp.List(params), ...body]) =>
+      Result(
+        SExp.List([
+          SExp.Atom("fun"),
+          SExp.List(params),
+          SExp.List([
+            SExp.Atom("let"),
+            SExp.List(
+              env |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+            ),
+            ...body,
+          ]),
+        ]),
+      )
+    | SExp.List([
+        SExp.List([SExp.Atom("fun"), SExp.List(params), ...body]) as fn,
+        ...real,
+      ]) =>
+      if (List.length(real) > List.length(params)) {
+        Error(SExp.List([SExp.Atom("InvalidCall"), fn]));
+      } else {
+        let rec loop = prev => (
+          fun
+          | ([], []) =>
+            eval(
+              ctx,
+              env,
+              SExp.List([
+                SExp.Atom("let"),
+                SExp.List(
+                  prev
+                  |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+                ),
+                ...body,
+              ]),
+            )
+          | (list, []) =>
+            Result(
+              SExp.List([
+                SExp.Atom("fun"),
+                SExp.List(list),
+                SExp.List([
+                  SExp.Atom("let"),
+                  SExp.List(
+                    prev
+                    |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+                  ),
+                  ...body,
+                ]),
+              ]),
+            )
+          | ([SExp.Atom(name), ...pn], [r, ...rn]) =>
+            loop([(name, r), ...prev], (pn, rn))
+          | _ => Error(SExp.Atom("InvalidFunction"))
+        );
+        loop([], (params, real));
+      }
     | SExp.List([SExp.List(_) as list, ...next]) =>
       switch (eval(ctx, env, list)) {
       | Result(rst) => eval(ctx, env, SExp.List([rst, ...next]))
