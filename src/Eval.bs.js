@@ -16,6 +16,33 @@ var Invalid = Caml_exceptions.create("Eval-ReactTemplate.Invalid");
 
 var $great$eq$great = List.rev_append;
 
+function purgeEnv(num, env) {
+  var loop = function (_param) {
+    while(true) {
+      var param = _param;
+      var n = param[0];
+      if (n !== 0) {
+        var match = param[1];
+        if (match) {
+          _param = /* tuple */[
+            n - 1 | 0,
+            match[1]
+          ];
+          continue ;
+        } else {
+          throw Invalid;
+        }
+      } else {
+        return param[1];
+      }
+    };
+  };
+  return List.rev(loop(/* tuple */[
+                  num,
+                  List.rev(env)
+                ]));
+}
+
 function isValid(text) {
   return (/(?:-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?:true|false)|null/g).test(text);
 }
@@ -26,7 +53,7 @@ function isOperator(text) {
 
 var jseval = function (op,a,b){return eval(a+op+b)+''};
 
-var isTrue = Curry._1(function (x,a){return !!b}, 0);
+var isTrue = Curry._1(function (x,a){return x+!!a;}, "");
 
 function Make(Ctx) {
   $$Map.Make([$$String.compare]);
@@ -211,10 +238,11 @@ function Make(Ctx) {
             var sp = fn[0];
             var exit$2 = 0;
             var exit$3 = 0;
+            var exit$4 = 0;
             switch (sp) {
               case "clear" : 
                   if (match[1]) {
-                    exit$3 = 2;
+                    exit$4 = 3;
                   } else {
                     Curry._1(Ctx[/* clear */0], ctx);
                     return /* Result */Block.__(0, [SExp$ReactTemplate.empty]);
@@ -230,7 +258,7 @@ function Make(Ctx) {
                   }
               case "dump" : 
                   if (match[1]) {
-                    exit$3 = 2;
+                    exit$4 = 3;
                   } else {
                     return /* Result */Block.__(0, [/* List */Block.__(1, [List.map((function (param) {
                                           return /* List */Block.__(1, [/* :: */[
@@ -293,11 +321,11 @@ function Make(Ctx) {
                           }
                         };
                       };
-                      var exit$4 = 0;
+                      var exit$5 = 0;
                       var nenv;
                       try {
                         nenv = loop(env, match$8[0]);
-                        exit$4 = 3;
+                        exit$5 = 4;
                       }
                       catch (exn){
                         if (exn === Invalid) {
@@ -306,7 +334,7 @@ function Make(Ctx) {
                           throw exn;
                         }
                       }
-                      if (exit$4 === 3) {
+                      if (exit$5 === 4) {
                         var _param$1 = match$7[1];
                         while(true) {
                           var param$1 = _param$1;
@@ -327,22 +355,22 @@ function Make(Ctx) {
                       }
                       
                     } else {
-                      exit$3 = 2;
+                      exit$4 = 3;
                     }
                   } else {
-                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                    exit$2 = 1;
                   }
                   break;
               case "quote" : 
                   var match$9 = match[1];
                   if (match$9) {
                     if (match$9[1]) {
-                      exit$3 = 2;
+                      exit$4 = 3;
                     } else {
                       return /* Result */Block.__(0, [match$9[0]]);
                     }
                   } else {
-                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                    exit$2 = 1;
                   }
                   break;
               case "string" : 
@@ -362,16 +390,16 @@ function Make(Ctx) {
                                                 }
                                               }), match$11[0]))])]);
                     } else {
-                      exit$3 = 2;
+                      exit$4 = 3;
                     }
                   } else {
-                    return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                    exit$2 = 1;
                   }
                   break;
               default:
-                exit$3 = 2;
+                exit$4 = 3;
             }
-            if (exit$3 === 2) {
+            if (exit$4 === 3) {
               var match$12 = match[1];
               if (match$12) {
                 var match$13 = match$12[1];
@@ -418,66 +446,63 @@ function Make(Ctx) {
                               }
                               }(sp,b)), a);
                   } else {
-                    exit$2 = 1;
+                    exit$3 = 2;
                   }
                 } else {
-                  exit$2 = 1;
+                  exit$3 = 2;
                 }
               } else {
-                return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                exit$2 = 1;
               }
             }
-            if (exit$2 === 1) {
+            if (exit$3 === 2) {
               switch (sp) {
                 case "define" : 
                     var match$14 = match[1];
                     var match$15 = match$14[0];
                     if (match$15.tag) {
-                      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                      exit$2 = 1;
                     } else {
                       var match$16 = match$14[1];
-                      if (match$16) {
-                        if (match$16[1]) {
-                          return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                      if (match$16 && !match$16[1]) {
+                        var name = match$15[0];
+                        var err$2 = $$eval(ctx, env, match$16[0]);
+                        if (err$2.tag) {
+                          return err$2;
                         } else {
-                          var name = match$15[0];
-                          var err$2 = $$eval(ctx, env, match$16[0]);
-                          if (err$2.tag) {
-                            return err$2;
-                          } else {
-                            var rst = err$2[0];
-                            Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
-                                  name,
-                                  rst
-                                ]);
-                            return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
-                                            /* Atom */Block.__(0, ["defined"]),
+                          var rst = err$2[0];
+                          Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
+                                name,
+                                rst
+                              ]);
+                          return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
+                                          /* Atom */Block.__(0, ["defined"]),
+                                          /* :: */[
+                                            /* List */Block.__(1, [/* :: */[
+                                                  /* Atom */Block.__(0, ["quote"]),
+                                                  /* :: */[
+                                                    /* Atom */Block.__(0, [name]),
+                                                    /* [] */0
+                                                  ]
+                                                ]]),
                                             /* :: */[
-                                              /* List */Block.__(1, [/* :: */[
-                                                    /* Atom */Block.__(0, ["quote"]),
-                                                    /* :: */[
-                                                      /* Atom */Block.__(0, [name]),
-                                                      /* [] */0
-                                                    ]
-                                                  ]]),
-                                              /* :: */[
-                                                rst,
-                                                /* [] */0
-                                              ]
+                                              rst,
+                                              /* [] */0
                                             ]
-                                          ]])]);
-                          }
+                                          ]
+                                        ]])]);
                         }
                       } else {
-                        return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                        exit$2 = 1;
                       }
                     }
+                    break;
                 case "fun" : 
                     var match$17 = match[1];
                     var match$18 = match$17[0];
                     if (match$18.tag) {
                       var body$1 = match$17[1];
-                      var exit$5 = 0;
+                      var exit$6 = 0;
                       if (body$1) {
                         var match$19 = body$1[0];
                         if (match$19.tag) {
@@ -485,25 +510,25 @@ function Make(Ctx) {
                           if (match$20) {
                             var match$21 = match$20[0];
                             if (match$21.tag || match$21[0] !== "let") {
-                              exit$5 = 2;
+                              exit$6 = 3;
                             } else {
                               var match$22 = match$20[1];
                               if (match$22 && match$22[0].tag && !body$1[1]) {
                                 return /* Result */Block.__(0, [src]);
                               } else {
-                                exit$5 = 2;
+                                exit$6 = 3;
                               }
                             }
                           } else {
-                            exit$5 = 2;
+                            exit$6 = 3;
                           }
                         } else {
-                          exit$5 = 2;
+                          exit$6 = 3;
                         }
                       } else {
-                        exit$5 = 2;
+                        exit$6 = 3;
                       }
-                      if (exit$5 === 2) {
+                      if (exit$6 === 3) {
                         return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
                                         /* Atom */Block.__(0, ["fun"]),
                                         /* :: */[
@@ -520,7 +545,7 @@ function Make(Ctx) {
                                                                               /* [] */0
                                                                             ]
                                                                           ]]);
-                                                              }), env)]),
+                                                              }), purgeEnv(Curry._1(Ctx[/* count */4], ctx), env))]),
                                                     body$1
                                                   ]
                                                 ]]),
@@ -531,11 +556,22 @@ function Make(Ctx) {
                       }
                       
                     } else {
-                      return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                      exit$2 = 1;
                     }
                     break;
                 default:
-                  return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
+                  exit$2 = 1;
+              }
+            }
+            if (exit$2 === 1) {
+              if (List.mem_assoc(sp, env)) {
+                _src = /* List */Block.__(1, [/* :: */[
+                      List.assoc(sp, env),
+                      match[1]
+                    ]]);
+                continue ;
+              } else {
+                return /* Error */Block.__(1, [/* Atom */Block.__(0, ["NotFound"])]);
               }
             }
             
@@ -548,11 +584,11 @@ function Make(Ctx) {
         if (isValid(name$1)) {
           return /* Result */Block.__(0, [src]);
         } else {
-          var exit$6 = 0;
+          var exit$7 = 0;
           var data;
           try {
             data = List.assoc(name$1, env);
-            exit$6 = 1;
+            exit$7 = 1;
           }
           catch (exn$1){
             if (exn$1 === Caml_builtin_exceptions.not_found) {
@@ -567,7 +603,7 @@ function Make(Ctx) {
               throw exn$1;
             }
           }
-          if (exit$6 === 1) {
+          if (exit$7 === 1) {
             return /* Result */Block.__(0, [data]);
           }
           
@@ -581,6 +617,7 @@ function Make(Ctx) {
 exports.Imposible = Imposible;
 exports.Invalid = Invalid;
 exports.$great$eq$great = $great$eq$great;
+exports.purgeEnv = purgeEnv;
 exports.isValid = isValid;
 exports.isOperator = isOperator;
 exports.jseval = jseval;

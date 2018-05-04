@@ -43,11 +43,16 @@ function $less$tilde(self, param) {
               ]));
 }
 
+function count(self) {
+  return Curry._1(StringMap[/* cardinal */15], self[/* state */1][/* mods */1]);
+}
+
 var EvelInstance = Eval$ReactTemplate.Make(/* module */[
       /* clear */clear,
       /* << */$less$less,
       /* >> */$great$great,
-      /* <~ */$less$tilde
+      /* <~ */$less$tilde,
+      /* count */count
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");

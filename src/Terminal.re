@@ -39,6 +39,7 @@ module EvelInstance =
       let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
       let (<~) = (self, (name, body)) => Define(name, body) |> self.send;
+      let count = (self) => self.state.mods |> StringMap.cardinal;
     },
   );
 

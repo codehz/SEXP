@@ -6,6 +6,16 @@ type env = list((string, SExp.t));
 
 let (>=>) = (a, b) => List.rev_append(a, b);
 
+let purgeEnv = (num, env) => {
+  let rec loop = (
+    fun
+    | (0, list) => list
+    | (n, [_, ...tl]) => (n - 1, tl) |> loop
+    | _ => raise(Invalid)
+  );
+  (num, env |> List.rev) |> loop |> List.rev;
+};
+
 type promptPack('t) =
   | Prompt('t, string);
 
@@ -15,6 +25,7 @@ module type Context = {
   let (<<): (t, SExp.t) => unit;
   let (>>): (promptPack(t), SExp.t => unit) => unit;
   let (<~): (t, (string, SExp.t)) => unit;
+  let count: (t) => int;
 };
 
 type result =
@@ -34,7 +45,7 @@ let isOperator = text => Js.Re.test(text, [%re "/\\+|-|\\*|\\/|<|>/g"]);
 let jseval: (string, string, string) => string =
   fun%raw (op, a, b) => "return eval(a+op+b)+''";
 
-let isTrue: string => string = (fun%raw (x, a) => "return !!b")(0);
+let isTrue: string => string = (fun%raw (x, a) => "return x+!!a;")("");
 
 module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
   module StringMap = Map.Make(String);
@@ -149,8 +160,8 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
       }
     | SExp.List([
         SExp.Atom("fun"),
-        SExp.List(params),
-        SExp.List([SExp.Atom("let"), SExp.List(vars), ...body]),
+        SExp.List(_),
+        SExp.List([SExp.Atom("let"), SExp.List(_), ..._]),
       ]) as src =>
       Result(src)
     | SExp.List([SExp.Atom("fun"), SExp.List(params), ...body]) =>
@@ -161,7 +172,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           SExp.List([
             SExp.Atom("let"),
             SExp.List(
-              env |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+              env |> purgeEnv(ctx |> Ctx.count) |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
             ),
             ...body,
           ]),
@@ -215,5 +226,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
       | Result(rst) => eval(ctx, env, SExp.List([rst, ...next]))
       | err => err
       }
+    | SExp.List([SExp.Atom(fn), ...next]) when env |> List.mem_assoc(fn) =>
+      eval(ctx, env, SExp.List([env |> List.assoc(fn), ...next]))
     | _ => Error(SExp.Atom("NotFound"));
 };
