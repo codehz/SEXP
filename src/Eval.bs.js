@@ -48,7 +48,7 @@ function isValid(text) {
 }
 
 function isOperator(text) {
-  return (/\+|-|\*|\/|<|>/g).test(text);
+  return (/\+|-|\*|\/|<|>|&&|\|\|/g).test(text);
 }
 
 var jseval = function (op,a,b){return eval(a+op+b)+''};
@@ -296,15 +296,20 @@ function Make(Ctx) {
                                     if (match$3[1]) {
                                       throw Invalid;
                                     } else {
-                                      _param = param[1];
-                                      _prev = /* :: */[
-                                        /* tuple */[
-                                          match$2[0],
-                                          match$3[0]
-                                        ],
-                                        prev
-                                      ];
-                                      continue ;
+                                      var match$4 = $$eval(ctx, env, match$3[0]);
+                                      if (match$4.tag) {
+                                        throw Invalid;
+                                      } else {
+                                        _param = param[1];
+                                        _prev = /* :: */[
+                                          /* tuple */[
+                                            match$2[0],
+                                            match$4[0]
+                                          ],
+                                          prev
+                                        ];
+                                        continue ;
+                                      }
                                     }
                                   } else {
                                     throw Invalid;

@@ -7,12 +7,11 @@ type env = list((string, SExp.t));
 let (>=>) = (a, b) => List.rev_append(a, b);
 
 let purgeEnv = (num, env) => {
-  let rec loop = (
+  let rec loop =
     fun
     | (0, list) => list
     | (n, [_, ...tl]) => (n - 1, tl) |> loop
-    | _ => raise(Invalid)
-  );
+    | _ => raise(Invalid);
   (num, env |> List.rev) |> loop |> List.rev;
 };
 
@@ -25,7 +24,7 @@ module type Context = {
   let (<<): (t, SExp.t) => unit;
   let (>>): (promptPack(t), SExp.t => unit) => unit;
   let (<~): (t, (string, SExp.t)) => unit;
-  let count: (t) => int;
+  let count: t => int;
 };
 
 type result =
@@ -40,7 +39,8 @@ let isValid = text =>
     ],
   );
 
-let isOperator = text => Js.Re.test(text, [%re "/\\+|-|\\*|\\/|<|>/g"]);
+let isOperator = text =>
+  Js.Re.test(text, [%re "/\\+|-|\\*|\\/|<|>|&&|\\|\\|/g"]);
 
 let jseval: (string, string, string) => string =
   fun%raw (op, a, b) => "return eval(a+op+b)+''";
@@ -114,7 +114,10 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           fun
           | [] => prev
           | [SExp.List([SExp.Atom(key), value]), ...next] =>
-            loop([(key, value), ...prev], next)
+            switch (eval(ctx, env, value)) {
+            | Result(nval) => loop([(key, nval), ...prev], next)
+            | _ => raise(Invalid)
+            }
           | _ => raise(Invalid)
         );
         switch (loop(env, vars)) {
@@ -172,7 +175,9 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           SExp.List([
             SExp.Atom("let"),
             SExp.List(
-              env |> purgeEnv(ctx |> Ctx.count) |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+              env
+              |> purgeEnv(ctx |> Ctx.count)
+              |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
             ),
             ...body,
           ]),
