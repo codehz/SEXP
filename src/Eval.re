@@ -6,13 +6,22 @@ type env = list((string, SExp.t));
 
 let (>=>) = (a, b) => List.rev_append(a, b);
 
-let purgeEnv = (num, env) => {
+let purgeList = (num, env) => {
   let rec loop =
     fun
     | (0, list) => list
     | (n, [_, ...tl]) => (n - 1, tl) |> loop
     | _ => raise(Invalid);
   (num, env |> List.rev) |> loop |> List.rev;
+};
+
+let partitionList = (num, env) => {
+  let rec loop = prev =>
+    fun
+    | (0, list) => (prev, list |> List.rev)
+    | (n, [hd, ...tl]) => (n - 1, tl) |> loop([hd, ...prev])
+    | _ => raise(Invalid);
+  (num, env |> List.rev) |> loop([]);
 };
 
 type promptPack('t) =
@@ -141,7 +150,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           switch (x |> eval(ctx, env)) {
           | Result(SExp.Atom(xv)) when isValid(xv) => fn(xv)
           | Result(_) => Error(SExp.List([SExp.Atom("FailedToConvert"), a]))
-          | err => err
+          | err => Error(SExp.List([SExp.Atom("ErrorInsideOp"), err]))
           };
         proc(
           av => proc(bv => Result(SExp.Atom(jseval(sp, av, bv))), b),
@@ -176,7 +185,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
             SExp.Atom("let"),
             SExp.List(
               env
-              |> purgeEnv(ctx |> Ctx.count)
+              |> purgeList(ctx |> Ctx.count)
               |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
             ),
             ...body,
@@ -188,36 +197,45 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
         ...real,
       ]) =>
       if (List.length(real) > List.length(params)) {
-        Error(SExp.List([SExp.Atom("InvalidCall"), fn]));
+        let (prev, next) =
+          real |> partitionList(List.length(real) - List.length(params));
+        eval(ctx, env, SExp.List([SExp.List([fn, ...next]), ...prev]));
       } else {
+        let mkCore = prev =>
+          switch (body) {
+          | [SExp.List([SExp.Atom("let"), SExp.List(list), ...next])] =>
+            SExp.List([
+              SExp.Atom("let"),
+              SExp.List(
+                prev
+                |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v]))
+                >=> list,
+              ),
+              ...next,
+            ])
+          | _ =>
+            SExp.List([
+              SExp.Atom("let"),
+              SExp.List(
+                prev |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+              ),
+              ...body,
+            ])
+          };
         let rec loop = prev => (
           fun
           | ([], []) =>
             eval(
               ctx,
               env,
-              SExp.List([
-                SExp.Atom("let"),
-                SExp.List(
-                  prev
-                  |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
-                ),
-                ...body,
-              ]),
+              prev |> mkCore,
             )
           | (list, []) =>
             Result(
               SExp.List([
                 SExp.Atom("fun"),
                 SExp.List(list),
-                SExp.List([
-                  SExp.Atom("let"),
-                  SExp.List(
-                    prev
-                    |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
-                  ),
-                  ...body,
-                ]),
+                prev |> mkCore,
               ]),
             )
           | ([SExp.Atom(name), ...pn], [r, ...rn]) =>
@@ -233,5 +251,5 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
       }
     | SExp.List([SExp.Atom(fn), ...next]) when env |> List.mem_assoc(fn) =>
       eval(ctx, env, SExp.List([env |> List.assoc(fn), ...next]))
-    | _ => Error(SExp.Atom("NotFound"));
+    | unknown => Error(SExp.List([SExp.Atom("UnknownCommand"), unknown]));
 };
