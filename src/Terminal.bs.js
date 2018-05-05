@@ -43,8 +43,12 @@ function $less$tilde(self, param) {
               ]));
 }
 
-function count(self) {
-  return Curry._1(StringMap[/* cardinal */15], self[/* state */1][/* mods */1]);
+function $percent(self, name) {
+  return Curry._2(StringMap[/* find */21], name, self[/* state */1][/* mods */1]);
+}
+
+function has(self, name) {
+  return Curry._2(StringMap[/* mem */2], name, self[/* state */1][/* mods */1]);
 }
 
 var EvelInstance = Eval$ReactTemplate.Make(/* module */[
@@ -52,7 +56,8 @@ var EvelInstance = Eval$ReactTemplate.Make(/* module */[
       /* << */$less$less,
       /* >> */$great$great,
       /* <~ */$less$tilde,
-      /* count */count
+      /* % */$percent,
+      /* has */has
     ]);
 
 var component$1 = ReasonReact.statelessComponent("Label");
@@ -169,7 +174,7 @@ function make$1() {
                                 if (match) {
                                   return Curry._1(match[0][/* handler */1], state[/* minibuffer */2]);
                                 } else {
-                                  var match$1 = Curry._3(EvelInstance[/* eval */0], self, Curry._1(StringMap[/* bindings */16], state[/* mods */1]), state[/* minibuffer */2]);
+                                  var match$1 = Curry._3(EvelInstance[/* eval */0], self, /* [] */0, state[/* minibuffer */2]);
                                   if (match$1.tag) {
                                     return Curry._1(self[/* send */3], /* AppendBuffer */Block.__(0, [
                                                   match$1[0],

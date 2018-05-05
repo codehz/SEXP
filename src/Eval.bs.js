@@ -8,40 +8,12 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var $$String = require("bs-platform/lib/js/string.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var SExp$ReactTemplate = require("./SExp.bs.js");
-var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 
 var Imposible = Caml_exceptions.create("Eval-ReactTemplate.Imposible");
 
 var Invalid = Caml_exceptions.create("Eval-ReactTemplate.Invalid");
 
 var $great$eq$great = List.rev_append;
-
-function purgeList(num, env) {
-  var loop = function (_param) {
-    while(true) {
-      var param = _param;
-      var n = param[0];
-      if (n !== 0) {
-        var match = param[1];
-        if (match) {
-          _param = /* tuple */[
-            n - 1 | 0,
-            match[1]
-          ];
-          continue ;
-        } else {
-          throw Invalid;
-        }
-      } else {
-        return param[1];
-      }
-    };
-  };
-  return List.rev(loop(/* tuple */[
-                  num,
-                  List.rev(env)
-                ]));
-}
 
 function partitionList(num, env) {
   var _prev = /* [] */0;
@@ -490,16 +462,22 @@ function Make(Ctx) {
                   if (isOperator(sp)) {
                     var proc = (function(a){
                     return function proc(fn, x) {
-                      var err = $$eval(ctx, env, x);
-                      if (err.tag) {
-                        return err;
+                      var match = $$eval(ctx, env, x);
+                      if (match.tag) {
+                        return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                                        /* Atom */Block.__(0, ["ErrorInsideOp"]),
+                                        /* :: */[
+                                          match[0],
+                                          /* [] */0
+                                        ]
+                                      ]])]);
                       } else {
-                        var match = err[0];
+                        var match$1 = match[0];
                         var exit = 0;
-                        if (match.tag) {
+                        if (match$1.tag) {
                           exit = 1;
                         } else {
-                          var xv = match[0];
+                          var xv = match$1[0];
                           if (isValid(xv)) {
                             return Curry._1(fn, xv);
                           } else {
@@ -626,7 +604,7 @@ function Make(Ctx) {
                                                                               /* [] */0
                                                                             ]
                                                                           ]]);
-                                                              }), purgeList(Curry._1(Ctx[/* count */4], ctx), env))]),
+                                                              }), env)]),
                                                     body$1
                                                   ]
                                                 ]]),
@@ -645,10 +623,17 @@ function Make(Ctx) {
               }
             }
             if (exit$2 === 1) {
+              var next = match[1];
               if (List.mem_assoc(sp, env)) {
                 _src = /* List */Block.__(1, [/* :: */[
                       List.assoc(sp, env),
-                      match[1]
+                      next
+                    ]]);
+                continue ;
+              } else if (Curry._2(Ctx[/* has */5], ctx, sp)) {
+                _src = /* List */Block.__(1, [/* :: */[
+                      Curry._2(Ctx[/* % */4], ctx, sp),
+                      next
                     ]]);
                 continue ;
               } else {
@@ -670,30 +655,18 @@ function Make(Ctx) {
         var name$1 = src[0];
         if (isValid(name$1)) {
           return /* Result */Block.__(0, [src]);
+        } else if (List.mem_assoc(name$1, env)) {
+          return /* Result */Block.__(0, [List.assoc(name$1, env)]);
+        } else if (Curry._2(Ctx[/* has */5], ctx, name$1)) {
+          return /* Result */Block.__(0, [Curry._2(Ctx[/* % */4], ctx, name$1)]);
         } else {
-          var exit$7 = 0;
-          var data;
-          try {
-            data = List.assoc(name$1, env);
-            exit$7 = 1;
-          }
-          catch (exn$1){
-            if (exn$1 === Caml_builtin_exceptions.not_found) {
-              return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
-                              /* Atom */Block.__(0, ["SymbolNotFound"]),
-                              /* :: */[
-                                /* Atom */Block.__(0, [name$1]),
-                                /* [] */0
-                              ]
-                            ]])]);
-            } else {
-              throw exn$1;
-            }
-          }
-          if (exit$7 === 1) {
-            return /* Result */Block.__(0, [data]);
-          }
-          
+          return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                          /* Atom */Block.__(0, ["SymbolNotFound"]),
+                          /* :: */[
+                            /* Atom */Block.__(0, [name$1]),
+                            /* [] */0
+                          ]
+                        ]])]);
         }
       }
     };
@@ -704,7 +677,6 @@ function Make(Ctx) {
 exports.Imposible = Imposible;
 exports.Invalid = Invalid;
 exports.$great$eq$great = $great$eq$great;
-exports.purgeList = purgeList;
 exports.partitionList = partitionList;
 exports.isValid = isValid;
 exports.isOperator = isOperator;

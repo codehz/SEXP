@@ -39,7 +39,8 @@ module EvelInstance =
       let (>>) = (Eval.Prompt(self, prompt), callback) =>
         Prompt(prompt, callback) |> self.send;
       let (<~) = (self, (name, body)) => Define(name, body) |> self.send;
-      let count = (self) => self.state.mods |> StringMap.cardinal;
+      let (%) = (self, name) =>  self.state.mods |> StringMap.find(name);
+      let has = (self, name) =>  self.state.mods |> StringMap.mem(name);
     },
   );
 
@@ -91,7 +92,7 @@ let make = _children => {
           self =>
             switch (state.prompt) {
             | None =>
-              switch (EvelInstance.eval(self, state.mods |> StringMap.bindings , state.minibuffer)) {
+              switch (EvelInstance.eval(self, [], state.minibuffer)) {
               | Eval.Result(exp) => AppendBuffer(exp, "result") |> self.send
               | Eval.Error(exp) => AppendBuffer(exp, "error") |> self.send
               }

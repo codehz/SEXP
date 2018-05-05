@@ -6,15 +6,6 @@ type env = list((string, SExp.t));
 
 let (>=>) = (a, b) => List.rev_append(a, b);
 
-let purgeList = (num, env) => {
-  let rec loop =
-    fun
-    | (0, list) => list
-    | (n, [_, ...tl]) => (n - 1, tl) |> loop
-    | _ => raise(Invalid);
-  (num, env |> List.rev) |> loop |> List.rev;
-};
-
 let partitionList = (num, env) => {
   let rec loop = prev =>
     fun
@@ -33,7 +24,8 @@ module type Context = {
   let (<<): (t, SExp.t) => unit;
   let (>>): (promptPack(t), SExp.t => unit) => unit;
   let (<~): (t, (string, SExp.t)) => unit;
-  let count: t => int;
+  let (%): (t, string) => SExp.t;
+  let has: (t, string) => bool;
 };
 
 type result =
@@ -83,10 +75,12 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
     | SExp.List([]) as src => Result(src)
     | SExp.Atom(name) as src when isValid(name) => Result(src)
     | SExp.Atom(name) =>
-      switch (List.assoc(name, env)) {
-      | data => Result(data)
-      | exception Not_found =>
-        Error(SExp.List([SExp.Atom("SymbolNotFound"), SExp.Atom(name)]))
+      if (List.mem_assoc(name, env)) {
+        Result(List.assoc(name, env));
+      } else if (Ctx.has(ctx, name)) {
+        Result(Ctx.(ctx % name));
+      } else {
+        Error(SExp.List([SExp.Atom("SymbolNotFound"), SExp.Atom(name)]));
       }
     | SExp.List([SExp.Atom("quote"), next]) => Result(next)
     | SExp.List([SExp.Atom("string"), SExp.List(list)]) =>
@@ -150,7 +144,8 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           switch (x |> eval(ctx, env)) {
           | Result(SExp.Atom(xv)) when isValid(xv) => fn(xv)
           | Result(_) => Error(SExp.List([SExp.Atom("FailedToConvert"), a]))
-          | err => Error(SExp.List([SExp.Atom("ErrorInsideOp"), err]))
+          | Error(err) =>
+            Error(SExp.List([SExp.Atom("ErrorInsideOp"), err]))
           };
         proc(
           av => proc(bv => Result(SExp.Atom(jseval(sp, av, bv))), b),
@@ -184,9 +179,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           SExp.List([
             SExp.Atom("let"),
             SExp.List(
-              env
-              |> purgeList(ctx |> Ctx.count)
-              |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
+              env |> List.map(((k, v)) => SExp.List([SExp.Atom(k), v])),
             ),
             ...body,
           ]),
@@ -224,12 +217,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
           };
         let rec loop = prev => (
           fun
-          | ([], []) =>
-            eval(
-              ctx,
-              env,
-              prev |> mkCore,
-            )
+          | ([], []) => eval(ctx, env, prev |> mkCore)
           | (list, []) =>
             Result(
               SExp.List([
@@ -251,5 +239,7 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
       }
     | SExp.List([SExp.Atom(fn), ...next]) when env |> List.mem_assoc(fn) =>
       eval(ctx, env, SExp.List([env |> List.assoc(fn), ...next]))
+    | SExp.List([SExp.Atom(fn), ...next]) when Ctx.has(ctx, fn) =>
+      eval(ctx, env, SExp.List([Ctx.(ctx % fn), ...next]))
     | unknown => Error(SExp.List([SExp.Atom("UnknownCommand"), unknown]));
 };
