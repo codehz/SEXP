@@ -46,7 +46,7 @@ let isOperator = text =>
 let jseval: (string, string, string) => string =
   fun%raw (op, a, b) => "return eval(a+op+b)+''";
 
-let isTrue: string => string = (fun%raw (x, a) => "return x+!!a;")("");
+let isTrue: (string, 'a, 'a) => 'a  = (fun%raw (x, a, b) => "return eval(x) ? a : b;");
 
 module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
   module StringMap = Map.Make(String);
@@ -165,12 +165,32 @@ module Make = (Ctx: Context) : {let eval: (Ctx.t, env, SExp.t) => result;} => {
         );
       | err => err
       }
+    | SExp.List([SExp.Atom("if"), cond, itrue, ifalse]) =>
+      switch (eval(ctx, env, cond)) {
+      | Result(SExp.Atom(rst)) when isValid(rst) => isTrue(rst, itrue, ifalse) |> eval(ctx, env)
+      | _ => Error(SExp.List([SExp.Atom("InvalidCond"), cond]))
+      }
     | SExp.List([
         SExp.Atom("fun"),
         SExp.List(_),
         SExp.List([SExp.Atom("let"), SExp.List(_), ..._]),
       ]) as src =>
       Result(src)
+    | SExp.List([
+        SExp.Atom("defun"),
+        SExp.Atom(name),
+        SExp.List(_) as params,
+        ...body,
+      ]) =>
+      eval(
+        ctx,
+        env,
+        SExp.List([
+          SExp.Atom("define"),
+          SExp.Atom(name),
+          SExp.List([SExp.Atom("fun"), params, ...body]),
+        ]),
+      )
     | SExp.List([SExp.Atom("fun"), SExp.List(params), ...body]) =>
       Result(
         SExp.List([

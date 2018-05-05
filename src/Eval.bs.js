@@ -59,7 +59,7 @@ function isOperator(text) {
 
 var jseval = function (op,a,b){return eval(a+op+b)+''};
 
-var isTrue = Curry._1(function (x,a){return x+!!a;}, "");
+var isTrue = function (x,a,b){return eval(x) ? a : b;};
 
 function Make(Ctx) {
   $$Map.Make([$$String.compare]);
@@ -321,11 +321,61 @@ function Make(Ctx) {
                   break;
               case "eval" : 
                   return evalList(ctx, env, match[1]);
-              case "let" : 
+              case "if" : 
                   var match$8 = match[1];
                   if (match$8) {
-                    var match$9 = match$8[0];
-                    if (match$9.tag) {
+                    var match$9 = match$8[1];
+                    if (match$9) {
+                      var match$10 = match$9[1];
+                      if (match$10) {
+                        if (match$10[1]) {
+                          exit$2 = 1;
+                        } else {
+                          var cond = match$8[0];
+                          var match$11 = $$eval(ctx, env, cond);
+                          var exit$5 = 0;
+                          if (match$11.tag) {
+                            exit$5 = 4;
+                          } else {
+                            var match$12 = match$11[0];
+                            if (match$12.tag) {
+                              exit$5 = 4;
+                            } else {
+                              var rst = match$12[0];
+                              if (isValid(rst)) {
+                                _src = isTrue(rst, match$9[0], match$10[0]);
+                                continue ;
+                              } else {
+                                exit$5 = 4;
+                              }
+                            }
+                          }
+                          if (exit$5 === 4) {
+                            return /* Error */Block.__(1, [/* List */Block.__(1, [/* :: */[
+                                            /* Atom */Block.__(0, ["InvalidCond"]),
+                                            /* :: */[
+                                              cond,
+                                              /* [] */0
+                                            ]
+                                          ]])]);
+                          }
+                          
+                        }
+                      } else {
+                        exit$4 = 3;
+                      }
+                    } else {
+                      exit$2 = 1;
+                    }
+                  } else {
+                    exit$2 = 1;
+                  }
+                  break;
+              case "let" : 
+                  var match$13 = match[1];
+                  if (match$13) {
+                    var match$14 = match$13[0];
+                    if (match$14.tag) {
                       var loop = function (_prev, _param) {
                         while(true) {
                           var param = _param;
@@ -374,11 +424,11 @@ function Make(Ctx) {
                           }
                         };
                       };
-                      var exit$5 = 0;
+                      var exit$6 = 0;
                       var nenv;
                       try {
-                        nenv = loop(env, match$9[0]);
-                        exit$5 = 4;
+                        nenv = loop(env, match$14[0]);
+                        exit$6 = 4;
                       }
                       catch (exn){
                         if (exn === Invalid) {
@@ -387,8 +437,8 @@ function Make(Ctx) {
                           throw exn;
                         }
                       }
-                      if (exit$5 === 4) {
-                        var _param$1 = match$8[1];
+                      if (exit$6 === 4) {
+                        var _param$1 = match$13[1];
                         while(true) {
                           var param$1 = _param$1;
                           if (param$1) {
@@ -415,22 +465,22 @@ function Make(Ctx) {
                   }
                   break;
               case "quote" : 
-                  var match$10 = match[1];
-                  if (match$10) {
-                    if (match$10[1]) {
+                  var match$15 = match[1];
+                  if (match$15) {
+                    if (match$15[1]) {
                       exit$4 = 3;
                     } else {
-                      return /* Result */Block.__(0, [match$10[0]]);
+                      return /* Result */Block.__(0, [match$15[0]]);
                     }
                   } else {
                     exit$2 = 1;
                   }
                   break;
               case "string" : 
-                  var match$11 = match[1];
-                  if (match$11) {
-                    var match$12 = match$11[0];
-                    if (match$12.tag && !match$11[1]) {
+                  var match$16 = match[1];
+                  if (match$16) {
+                    var match$17 = match$16[0];
+                    if (match$17.tag && !match$16[1]) {
                       return /* Result */Block.__(0, [/* Atom */Block.__(0, [$$String.concat("", List.map((function (param) {
                                                 if (param.tag) {
                                                   if (param[0]) {
@@ -441,7 +491,7 @@ function Make(Ctx) {
                                                 } else {
                                                   return param[0];
                                                 }
-                                              }), match$12[0]))])]);
+                                              }), match$17[0]))])]);
                     } else {
                       exit$4 = 3;
                     }
@@ -453,12 +503,12 @@ function Make(Ctx) {
                 exit$4 = 3;
             }
             if (exit$4 === 3) {
-              var match$13 = match[1];
-              if (match$13) {
-                var match$14 = match$13[1];
-                if (match$14 && !match$14[1]) {
-                  var b = match$14[0];
-                  var a = match$13[0];
+              var match$18 = match[1];
+              if (match$18) {
+                var match$19 = match$18[1];
+                if (match$19 && !match$19[1]) {
+                  var b = match$19[0];
+                  var a = match$18[0];
                   if (isOperator(sp)) {
                     var proc = (function(a){
                     return function proc(fn, x) {
@@ -517,22 +567,22 @@ function Make(Ctx) {
             if (exit$3 === 2) {
               switch (sp) {
                 case "define" : 
-                    var match$15 = match[1];
-                    var match$16 = match$15[0];
-                    if (match$16.tag) {
+                    var match$20 = match[1];
+                    var match$21 = match$20[0];
+                    if (match$21.tag) {
                       exit$2 = 1;
                     } else {
-                      var match$17 = match$15[1];
-                      if (match$17 && !match$17[1]) {
-                        var name = match$16[0];
-                        var err$2 = $$eval(ctx, env, match$17[0]);
+                      var match$22 = match$20[1];
+                      if (match$22 && !match$22[1]) {
+                        var name = match$21[0];
+                        var err$2 = $$eval(ctx, env, match$22[0]);
                         if (err$2.tag) {
                           return err$2;
                         } else {
-                          var rst = err$2[0];
+                          var rst$1 = err$2[0];
                           Curry._2(Ctx[/* <~ */3], ctx, /* tuple */[
                                 name,
-                                rst
+                                rst$1
                               ]);
                           return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
                                           /* Atom */Block.__(0, ["defined"]),
@@ -545,7 +595,7 @@ function Make(Ctx) {
                                                   ]
                                                 ]]),
                                             /* :: */[
-                                              rst,
+                                              rst$1,
                                               /* [] */0
                                             ]
                                           ]
@@ -556,42 +606,77 @@ function Make(Ctx) {
                       }
                     }
                     break;
+                case "defun" : 
+                    var match$23 = match[1];
+                    var match$24 = match$23[0];
+                    if (match$24.tag) {
+                      exit$2 = 1;
+                    } else {
+                      var match$25 = match$23[1];
+                      if (match$25) {
+                        var params$1 = match$25[0];
+                        if (params$1.tag) {
+                          _src = /* List */Block.__(1, [/* :: */[
+                                /* Atom */Block.__(0, ["define"]),
+                                /* :: */[
+                                  /* Atom */Block.__(0, [match$24[0]]),
+                                  /* :: */[
+                                    /* List */Block.__(1, [/* :: */[
+                                          /* Atom */Block.__(0, ["fun"]),
+                                          /* :: */[
+                                            params$1,
+                                            match$25[1]
+                                          ]
+                                        ]]),
+                                    /* [] */0
+                                  ]
+                                ]
+                              ]]);
+                          continue ;
+                        } else {
+                          exit$2 = 1;
+                        }
+                      } else {
+                        exit$2 = 1;
+                      }
+                    }
+                    break;
                 case "fun" : 
-                    var match$18 = match[1];
-                    var match$19 = match$18[0];
-                    if (match$19.tag) {
-                      var body$1 = match$18[1];
-                      var exit$6 = 0;
+                    var match$26 = match[1];
+                    var match$27 = match$26[0];
+                    if (match$27.tag) {
+                      var body$1 = match$26[1];
+                      var exit$7 = 0;
                       if (body$1) {
-                        var match$20 = body$1[0];
-                        if (match$20.tag) {
-                          var match$21 = match$20[0];
-                          if (match$21) {
-                            var match$22 = match$21[0];
-                            if (match$22.tag || match$22[0] !== "let") {
-                              exit$6 = 3;
+                        var match$28 = body$1[0];
+                        if (match$28.tag) {
+                          var match$29 = match$28[0];
+                          if (match$29) {
+                            var match$30 = match$29[0];
+                            if (match$30.tag || match$30[0] !== "let") {
+                              exit$7 = 3;
                             } else {
-                              var match$23 = match$21[1];
-                              if (match$23 && match$23[0].tag && !body$1[1]) {
+                              var match$31 = match$29[1];
+                              if (match$31 && match$31[0].tag && !body$1[1]) {
                                 return /* Result */Block.__(0, [src]);
                               } else {
-                                exit$6 = 3;
+                                exit$7 = 3;
                               }
                             }
                           } else {
-                            exit$6 = 3;
+                            exit$7 = 3;
                           }
                         } else {
-                          exit$6 = 3;
+                          exit$7 = 3;
                         }
                       } else {
-                        exit$6 = 3;
+                        exit$7 = 3;
                       }
-                      if (exit$6 === 3) {
+                      if (exit$7 === 3) {
                         return /* Result */Block.__(0, [/* List */Block.__(1, [/* :: */[
                                         /* Atom */Block.__(0, ["fun"]),
                                         /* :: */[
-                                          /* List */Block.__(1, [match$19[0]]),
+                                          /* List */Block.__(1, [match$27[0]]),
                                           /* :: */[
                                             /* List */Block.__(1, [/* :: */[
                                                   /* Atom */Block.__(0, ["let"]),
@@ -683,4 +768,4 @@ exports.isOperator = isOperator;
 exports.jseval = jseval;
 exports.isTrue = isTrue;
 exports.Make = Make;
-/* isTrue Not a pure module */
+/* No side effect */
